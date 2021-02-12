@@ -35,6 +35,18 @@ HANDLE sem_livre;
 HANDLE sem_ocupado;
 HANDLE sem_rw;
 
+/* cria variaveis necessarias para sincronizacao */
+
+int buffer_size = 200;
+int p_livre = 0;
+int p_ocupado = 0;
+
+/* cria variaveis de processo */
+
+int buffer[200];
+int medicao_counter = 0;
+int data_counter = 0;
+
 /* cria evento de termino de threads */
 
 HANDLE end_event;
@@ -45,20 +57,35 @@ DWORD WINAPI leitura_medicao(LPVOID);
 DWORD WINAPI leitura_dados(LPVOID);
 DWORD WINAPI captura_mensagens(LPVOID);
 
-void show_time();
+char* show_time();
 
 SYSTEMTIME tempo;
 
 int main()
 {
+
+    /* criacao de semaforos */
+
+    sem_livre = CreateSemaphore(NULL, buffer_size, buffer_size, NULL);
+    CheckForError(sem_livre);
+
+    sem_ocupado = CreateSemaphore(NULL, 0, buffer_size, NULL);
+    CheckForError(sem_ocupado);
+
+    sem_rw = CreateSemaphore(NULL, 1, 1, NULL);
+    CheckForError(sem_rw);
+    /* declaracao de threads */
+
 	HANDLE thread_leitura_medicao;
+	DWORD thread_leitura_medicao_id;
+
 	HANDLE thread_leitura_dados;
+	DWORD thread_leitura_dados_id;
+
 	HANDLE thread_captura_mensagens;
+	DWORD thread_captura_mensagens_id;
 
     HANDLE threads[3] = {thread_leitura_medicao, thread_leitura_dados, thread_captura_mensagens};
-	
-	DWORD thread_id;
-	DWORD thread_exit_code = 0;
 
     /* eventos com reset automatico */
 
@@ -81,30 +108,30 @@ int main()
 	thread_leitura_medicao= (HANDLE) _beginthreadex(NULL, 0, (CAST_FUNCTION)leitura_medicao, 
                                             (LPVOID)0,
                                                     0,
-                                            (CAST_LPDWORD)&thread_id	
+                                            (CAST_LPDWORD)&thread_leitura_medicao_id
                                             );
 
     CheckForError(thread_leitura_medicao);
 
-	thread_leitura_dados= (HANDLE) _beginthreadex(NULL, 0, (CAST_FUNCTION)leitura_dados, 
-                                            (LPVOID)0,
-                                                    0,
-                                            (CAST_LPDWORD)&thread_id	
-                                            );
+	/* thread_leitura_dados= (HANDLE) _beginthreadex(NULL, 0, (CAST_FUNCTION)leitura_dados, */ 
+                                            /* (LPVOID)0, */
+                                                    /* 0, */
+                                            /* (CAST_LPDWORD)&thread_leitura_dados_id */	
+                                            /* ); */
 
-    CheckForError(thread_leitura_dados);
+    /* CheckForError(thread_leitura_dados); */
 
 	thread_captura_mensagens = (HANDLE) _beginthreadex(NULL, 0, (CAST_FUNCTION)captura_mensagens, 
                                             (LPVOID)0,
                                                     0,
-                                            (CAST_LPDWORD)&thread_id	
+                                            (CAST_LPDWORD)&thread_captura_mensagens_id	
                                             );
 
     CheckForError(thread_captura_mensagens);
     
-	if (thread_leitura_medicao) printf("thread leitura de medicao criada com id = %0x \n", thread_id);
-	if (thread_leitura_dados) printf("thread leitura dados criada com id = %0x \n", thread_id);
-	if (thread_captura_mensagens) printf("thread captura mensagens criada com id = %0x \n", thread_id);
+	if (thread_leitura_medicao) printf("thread leitura de medicao criada com id = %0x \n", thread_leitura_medicao_id);
+	/* if (thread_leitura_dados) printf("thread leitura dados criada com id = %0x \n", thread_leitura_dados_id); */
+	if (thread_captura_mensagens) printf("thread captura mensagens criada com id = %0x \n", thread_captura_mensagens_id);
 
     char key;
 
@@ -159,7 +186,19 @@ DWORD WINAPI leitura_medicao(LPVOID id)
 
 	do {
 
-        show_time();
+        /* espera ter posicoes livres */
+        WaitForSingleObject(sem_livre, INFINITE); 
+        /* espera mutex para acessar buffer */
+        WaitForSingleObject(sem_rw, INFINITE);
+        
+        buffer[p_livre] = medicao_counter;
+        p_livre++;
+        printf("\nThread leitora de medicao depositou informacao em buffer: %i\n", medicao_counter);
+        medicao_counter++;
+
+        ReleaseSemaphore(sem_rw, 1, NULL);
+
+        ReleaseSemaphore(sem_ocupado, 1, NULL);
 
         /* espera por 1 s por objeto de toggle ou finalizador */
 
@@ -198,7 +237,20 @@ DWORD WINAPI leitura_dados(LPVOID id)
 
 	do {
 
-        show_time();
+        char* time = show_time();
+
+        /* espera ter posicoes livres */
+        WaitForSingleObject(sem_livre, INFINITE); 
+        /* espera mutex para acessar buffer */
+        WaitForSingleObject(sem_rw, INFINITE);
+        
+        buffer[p_livre] = medicao_counter;
+        printf("\nThread leitora de dados depositou informacao em buffer: %i\n", data_counter);
+        data_counter++;
+
+        ReleaseSemaphore(sem_rw, 1, NULL);
+
+        ReleaseSemaphore(sem_ocupado, 1, NULL);
 
         /* espera por 1 s por objeto de toggle ou finalizador */
 
@@ -237,7 +289,19 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 
 	do {
 
-        show_time();
+        /* logica padrao da thread */
+
+        WaitForSingleObject(sem_ocupado, INFINITE); 
+        /* espera mutex para acessar buffer */
+        WaitForSingleObject(sem_rw, INFINITE);
+        
+        int data = buffer[p_ocupado];
+        printf("\nThread capturadora de mensagens leu informacao %i em buffer[%i]\n", data, p_ocupado);
+        p_ocupado++;
+
+        ReleaseSemaphore(sem_rw, 1, NULL);
+
+        ReleaseSemaphore(sem_livre, 1, NULL);
 
         /* espera por 1 s por objeto de toggle ou finalizador */
 
@@ -269,10 +333,10 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 	return(0);
 } 
 
-void show_time()
+char* show_time()
 {	
-
+    char* time_string = (char*)malloc(sizeof(char) * 8);
 	GetLocalTime(&tempo);
-	printf("\n %02d:%02d:%02d \n ", tempo.wHour, tempo.wMinute, tempo.wSecond);
-
+	sprintf(time_string, "\n %02d:%02d:%02d \n ", tempo.wHour, tempo.wMinute, tempo.wSecond);
+    return time_string;
 };
