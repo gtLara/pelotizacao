@@ -37,14 +37,14 @@ HANDLE sem_rw;
 
 /* cria variaveis necessarias para sincronizacao */
 
-int buffer_size = 200;
+const int buffer_size = 10;
 int p_livre = 0;
 int p_ocupado = 0;
 
 /* cria variaveis de processo */
 
-int buffer[200];
-int medicao_counter = 0;
+int buffer[buffer_size];
+int medicao_counter = 1;
 int data_counter = 0;
 
 /* cria evento de termino de threads */
@@ -113,13 +113,13 @@ int main()
 
     CheckForError(thread_leitura_medicao);
 
-	/* thread_leitura_dados= (HANDLE) _beginthreadex(NULL, 0, (CAST_FUNCTION)leitura_dados, */ 
-                                            /* (LPVOID)0, */
-                                                    /* 0, */
-                                            /* (CAST_LPDWORD)&thread_leitura_dados_id */	
-                                            /* ); */
+	thread_leitura_dados= (HANDLE) _beginthreadex(NULL, 0, (CAST_FUNCTION)leitura_dados, 
+                                            (LPVOID)0,
+                                                    0,
+                                            (CAST_LPDWORD)&thread_leitura_dados_id	
+                                            );
 
-    /* CheckForError(thread_leitura_dados); */
+    CheckForError(thread_leitura_dados);
 
 	thread_captura_mensagens = (HANDLE) _beginthreadex(NULL, 0, (CAST_FUNCTION)captura_mensagens, 
                                             (LPVOID)0,
@@ -130,7 +130,7 @@ int main()
     CheckForError(thread_captura_mensagens);
     
 	if (thread_leitura_medicao) printf("thread leitura de medicao criada com id = %0x \n", thread_leitura_medicao_id);
-	/* if (thread_leitura_dados) printf("thread leitura dados criada com id = %0x \n", thread_leitura_dados_id); */
+	if (thread_leitura_dados) printf("thread leitura dados criada com id = %0x \n", thread_leitura_dados_id);
 	if (thread_captura_mensagens) printf("thread captura mensagens criada com id = %0x \n", thread_captura_mensagens_id);
 
     char key;
@@ -191,10 +191,12 @@ DWORD WINAPI leitura_medicao(LPVOID id)
         /* espera mutex para acessar buffer */
         WaitForSingleObject(sem_rw, INFINITE);
         
-        buffer[p_livre] = medicao_counter;
+        int index = p_livre % buffer_size;
+        buffer[index] = medicao_counter;
         p_livre++;
-        printf("\nThread leitora de medicao depositou informacao em buffer: %i\n", medicao_counter);
-        medicao_counter++;
+
+        printf("\nThread leitora de medicao depositou informacao %i em buffer[%i]\n", medicao_counter, index);
+        medicao_counter += 2;
 
         ReleaseSemaphore(sem_rw, 1, NULL);
 
@@ -237,21 +239,23 @@ DWORD WINAPI leitura_dados(LPVOID id)
 
 	do {
 
-        char* time = show_time();
+        /* char* time = show_time(); essa linha estava quebrando o codigo! investigar depois.*/
 
         /* espera ter posicoes livres */
         WaitForSingleObject(sem_livre, INFINITE); 
         /* espera mutex para acessar buffer */
         WaitForSingleObject(sem_rw, INFINITE);
         
-        buffer[p_livre] = medicao_counter;
-        printf("\nThread leitora de dados depositou informacao em buffer: %i\n", data_counter);
-        data_counter++;
+        int index = p_livre % buffer_size;
+        buffer[index] = data_counter;
+        p_livre++;
+
+        printf("\nThread leitora de dados depositou informacao %i em buffer[%i]\n", data_counter, index);
+        data_counter += 2;
 
         ReleaseSemaphore(sem_rw, 1, NULL);
 
         ReleaseSemaphore(sem_ocupado, 1, NULL);
-
         /* espera por 1 s por objeto de toggle ou finalizador */
 
 		ret=WaitForMultipleObjects(2, Events, FALSE, 1000);
@@ -295,8 +299,9 @@ DWORD WINAPI captura_mensagens(LPVOID id)
         /* espera mutex para acessar buffer */
         WaitForSingleObject(sem_rw, INFINITE);
         
-        int data = buffer[p_ocupado];
-        printf("\nThread capturadora de mensagens leu informacao %i em buffer[%i]\n", data, p_ocupado);
+        int index = p_ocupado % buffer_size;
+        int data = buffer[index];
+        printf("\nThread capturadora de mensagens leu informacao %i em buffer[%i]\n", data, index);
         p_ocupado++;
 
         ReleaseSemaphore(sem_rw, 1, NULL);
