@@ -135,7 +135,7 @@ int main()
 
     char key;
 
-	printf("\nqualquer tecla para fazer o toggle da leitura de medicao, esc para encerrar:\n");
+	printf("\ntecla g: leitura de medicao \n tecla c: leitura de dados \n tecla r: captura de mensagens \nesc para encerrar:\n");
 	do {
 
         key = _getch();
