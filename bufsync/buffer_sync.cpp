@@ -141,7 +141,7 @@ int main()
         key = _getch();
 
         switch(key){
-            case tecla_a:
+            case tecla_g:
                 SetEvent(leitura_medicao_toggle_event);
                 break;
             case tecla_c:
@@ -187,7 +187,13 @@ DWORD WINAPI leitura_medicao(LPVOID id)
 	do {
 
         /* espera ter posicoes livres */
-        WaitForSingleObject(sem_livre, INFINITE); 
+        ret = WaitForSingleObject(sem_livre, 100); 
+
+        if(ret == WAIT_TIMEOUT){
+            printf("\nThread leitora de medicao tentou depositar informacao mas buffer estava cheio. Se bloqueando ate livrar espaco\n");
+            WaitForSingleObject(sem_livre, INFINITE);
+        }
+
         /* espera mutex para acessar buffer */
         WaitForSingleObject(sem_rw, INFINITE);
         
@@ -242,7 +248,12 @@ DWORD WINAPI leitura_dados(LPVOID id)
         /* char* time = show_time(); essa linha estava quebrando o codigo! investigar depois.*/
 
         /* espera ter posicoes livres */
-        WaitForSingleObject(sem_livre, INFINITE); 
+        ret = WaitForSingleObject(sem_livre, 100); 
+
+        if(ret == WAIT_TIMEOUT){
+            printf("\nThread leitora de dados tentou depositar informacao mas buffer estava cheio. Se bloqueando ate livrar espaco\n");
+            WaitForSingleObject(sem_livre, INFINITE);
+        }
         /* espera mutex para acessar buffer */
         WaitForSingleObject(sem_rw, INFINITE);
         
