@@ -40,6 +40,7 @@ HANDLE sem_rw;
 const int buffer_size = 10;
 int p_livre = 0;
 int p_ocupado = 0;
+int timeout = 100;
 
 /* cria variaveis de processo */
 
@@ -187,7 +188,7 @@ DWORD WINAPI leitura_medicao(LPVOID id)
 	do {
 
         /* espera ter posicoes livres */
-        ret = WaitForSingleObject(sem_livre, 100); 
+        ret = WaitForSingleObject(sem_livre, timeout); 
 
         if(ret == WAIT_TIMEOUT){
             printf("\nThread leitora de medicao tentou depositar informacao mas buffer estava cheio. Se bloqueando ate livrar espaco\n");
@@ -210,7 +211,8 @@ DWORD WINAPI leitura_medicao(LPVOID id)
 
         /* espera por 1 s por objeto de toggle ou finalizador */
 
-		ret = WaitForMultipleObjects(2, Events, FALSE, 1000);
+        Sleep(1000);
+		ret = WaitForMultipleObjects(2, Events, FALSE, timeout);
 
         /* se tiver esperado o tempo limite, prosseguir com logica */
 
@@ -248,7 +250,7 @@ DWORD WINAPI leitura_dados(LPVOID id)
         /* char* time = show_time(); essa linha estava quebrando o codigo! investigar depois.*/
 
         /* espera ter posicoes livres */
-        ret = WaitForSingleObject(sem_livre, 100); 
+        ret = WaitForSingleObject(sem_livre, timeout); 
 
         if(ret == WAIT_TIMEOUT){
             printf("\nThread leitora de dados tentou depositar informacao mas buffer estava cheio. Se bloqueando ate livrar espaco\n");
@@ -269,7 +271,8 @@ DWORD WINAPI leitura_dados(LPVOID id)
         ReleaseSemaphore(sem_ocupado, 1, NULL);
         /* espera por 1 s por objeto de toggle ou finalizador */
 
-		ret=WaitForMultipleObjects(2, Events, FALSE, 1000);
+        Sleep(1000);
+		ret=WaitForMultipleObjects(2, Events, FALSE, timeout);
 
         /* se tiver esperado o tempo limite, prosseguir com logica */
 
@@ -321,7 +324,8 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 
         /* espera por 1 s por objeto de toggle ou finalizador */
 
-		ret=WaitForMultipleObjects(2, Events, FALSE, 1000);
+        Sleep(1000);
+		ret=WaitForMultipleObjects(2, Events, FALSE, timeout);
 
         /* se tiver esperado o tempo limite, prosseguir com logica */
 
