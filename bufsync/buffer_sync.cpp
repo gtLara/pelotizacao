@@ -86,7 +86,6 @@ int main()
 	HANDLE thread_captura_mensagens;
 	DWORD thread_captura_mensagens_id;
 
-    HANDLE threads[3] = {thread_leitura_medicao, thread_leitura_dados, thread_captura_mensagens};
 
     /* eventos com reset automatico */
 
@@ -129,6 +128,11 @@ int main()
                                             );
 
     CheckForError(thread_captura_mensagens);
+
+    HANDLE threads[3] = {thread_leitura_medicao, thread_leitura_dados, thread_captura_mensagens};
+
+    /* curioso: se o vetor acima for criado antes das atribuicoes das threads acima a main nao espera o termino */
+    /* das threads por meio da funcao WaitForMultipleObjects */
     
 	if (thread_leitura_medicao) printf("thread leitura de medicao criada com id = %0x \n", thread_leitura_medicao_id);
 	if (thread_leitura_dados) printf("thread leitura dados criada com id = %0x \n", thread_leitura_dados_id);
@@ -160,7 +164,7 @@ int main()
 
     /* aguarda termino de threads */ 
 
-    WaitForMultipleObjects(3, threads, FALSE, INFINITE);
+    WaitForMultipleObjects(3, threads, TRUE, INFINITE);
 
 	CloseHandle(thread_leitura_medicao);
 	CloseHandle(thread_leitura_dados);
@@ -171,8 +175,6 @@ int main()
 	CloseHandle(end_event);
 
 	printf("\nprocesso encerrando\n");	
-
-    /* TODO: ver como fazer main esperar por termino de thread. aqui isso nao parece ter acontecido. */
 
 	return EXIT_SUCCESS;
 }  // main
@@ -233,6 +235,8 @@ DWORD WINAPI leitura_medicao(LPVOID id)
 
 	} while (event_id != 1);
         
+	printf("\nprocesso leitura de medicao encerrando\n");	
+
 	_endthreadex((DWORD) 0);
 
 	return(0);
@@ -293,6 +297,8 @@ DWORD WINAPI leitura_dados(LPVOID id)
 
 	} while (event_id != 1);
         
+	printf("\nprocesso leitura de dados encerrando\n");	
+
 	_endthreadex((DWORD) 0);
 
 	return(0);
@@ -348,6 +354,7 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 
 	} while (event_id != 1); 
         
+	printf("\nprocesso captura de dados encerrando\n");	
 	_endthreadex((DWORD) 0);
 
 	return(0);
