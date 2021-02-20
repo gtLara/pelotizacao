@@ -30,7 +30,13 @@ int main(){
 
     if(event_id == 0){
         printf("\nProcesso exibicao de dados de processo bloqueando\n");
-        WaitForSingleObject(toggle_event, INFINITE);
+
+        ret = WaitForMultipleObjects(2, events, FALSE, INFINITE);
+
+        event_id = ret - WAIT_OBJECT_0;
+
+        if(event_id == 0){printf("\nProcesso exibicao de dados desbloqueado\n");}
+
         }
 
     }while(event_id != 1);
