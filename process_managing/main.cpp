@@ -238,7 +238,8 @@ int main()
 
 DWORD WINAPI leitura_medicao(LPVOID id)
 {	
-	HANDLE Events[2]= {leitura_medicao_toggle_event, end_event};
+	HANDLE Events[2] = {leitura_medicao_toggle_event, end_event};
+	HANDLE buffer_block_objects[2] = {sem_livre, end_event};
 	DWORD ret;
 	int event_id= 0;
 
@@ -249,7 +250,8 @@ DWORD WINAPI leitura_medicao(LPVOID id)
 
         if(ret == WAIT_TIMEOUT){
             printf("\nThread leitora de medicao tentou depositar informacao mas buffer estava cheio. Se bloqueando ate livrar espaco\n");
-            WaitForSingleObject(sem_livre, INFINITE);
+            ret = WaitForMultipleObjects(2, buffer_block_objects, FALSE, INFINITE);
+            if(ret == 1){break;}
         }
 
         /* espera mutex para acessar buffer */
@@ -305,6 +307,7 @@ DWORD WINAPI leitura_medicao(LPVOID id)
 DWORD WINAPI leitura_dados(LPVOID id)
 {	
     HANDLE Events[2]= {leitura_dados_toggle_event, end_event};
+    HANDLE buffer_block_objects[2] = {sem_livre, end_event};
 	DWORD ret;
 	int event_id= 0;
 
@@ -318,7 +321,9 @@ DWORD WINAPI leitura_dados(LPVOID id)
 
         if(ret == WAIT_TIMEOUT){
             printf("\nThread leitora de dados tentou depositar informacao mas buffer estava cheio. Se bloqueando ate livrar espaco\n");
-            WaitForSingleObject(sem_livre, INFINITE);
+            ret = WaitForMultipleObjects(2, buffer_block_objects, FALSE, INFINITE);
+            if(ret == 1){break;}
+
         }
         /* espera mutex para acessar buffer */
         WaitForSingleObject(sem_rw, INFINITE);
@@ -336,7 +341,7 @@ DWORD WINAPI leitura_dados(LPVOID id)
         /* espera por 1 s por objeto de toggle ou finalizador */
 
         Sleep(1000);
-		ret=WaitForMultipleObjects(2, Events, FALSE, timeout);
+		ret = WaitForMultipleObjects(2, Events, FALSE, timeout);
 
         /* se tiver esperado o tempo limite, prosseguir com logica */
 
