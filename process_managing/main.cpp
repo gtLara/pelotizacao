@@ -173,17 +173,17 @@ int main()
 		         &si_exibe_dados,			             // lpStartUpInfo
 		         &NewProcess);	             // lpProcessInformation
 
-	/* status = CreateProcess( */
-	/* 	         ".\\exibe_dados.exe", // Caminho do arquivo executável */
-	/*              NULL,                       // Apontador p/ parâmetros de linha de comando */
-                 /* NULL,                       // Apontador p/ descritor de segurança */
-	/* 			 NULL,                       // Idem, threads do processo */
-	/* 			 FALSE,	                     // Herança de handles */
-	/* 	         CREATE_NEW_CONSOLE,	     // Flags de criação */
-	/* 	         NULL,	                     // Herança do amniente de execução */
-	/* 	         NULL,	                     // seila que porra eh essa */
-	/* 	         &si_analise_granulometria,			             // lpStartUpInfo */
-	/* 	         &NewProcess);	             // lpProcessInformation */
+	status = CreateProcess(
+		         ".\\analise_granulometria.exe", // Caminho do arquivo executável
+	             NULL,                       // Apontador p/ parâmetros de linha de comando
+                 NULL,                       // Apontador p/ descritor de segurança
+				 NULL,                       // Idem, threads do processo
+				 FALSE,	                     // Herança de handles
+		         CREATE_NEW_CONSOLE,	     // Flags de criação
+		         NULL,	                     // Herança do amniente de execução
+		         NULL,	                     // seila que porra eh essa
+		         &si_analise_granulometria,			             // lpStartUpInfo
+		         &NewProcess);	             // lpProcessInformation
 
     if (!status) printf ("Erro na criacao do processo! Codigo = %d\n", GetLastError());
 
