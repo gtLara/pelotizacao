@@ -280,11 +280,16 @@ DWORD WINAPI leitura_medicao(LPVOID id)
         /* se nao, executar comportamento demandado */
 
 		event_id = ret - WAIT_OBJECT_0;
+
 		if (event_id == 0){
 
 			printf("\n thread leitura granulometria bloqueada. para desbloquear, aperte uma outra tecla qualquer \n");
-            WaitForSingleObject(leitura_medicao_toggle_event, INFINITE);
-			printf("\n thread leitura granulometria desbloqueada.\n");
+
+            ret = WaitForMultipleObjects(2, Events, FALSE, INFINITE);
+
+            event_id = ret - WAIT_OBJECT_0;
+
+			if(event_id == 0){printf("\n thread leitura granulometria desbloqueada.\n");}
 
 		}
 
@@ -345,9 +350,12 @@ DWORD WINAPI leitura_dados(LPVOID id)
 		if (event_id == 0){
 
 			printf("\n thread leitura dados bloqueada. para desbloquear, aperte uma outra tecla qualquer \n");
-            WaitForSingleObject(leitura_dados_toggle_event, INFINITE);
-			printf("\n thread leitura dados desbloqueada.\n");
 
+            ret = WaitForMultipleObjects(2, Events, FALSE, INFINITE);
+
+            event_id = ret - WAIT_OBJECT_0;
+
+			if(event_id == 0){printf("\n thread leitura dados desbloqueada.\n");}
 		}
 
 	} while (event_id != 1);
@@ -400,8 +408,12 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 		if (event_id == 0){
 
 			printf("\n thread captura mensagens bloqueada. para desbloquear, aperte uma outra tecla qualquer \n");
-            WaitForSingleObject(captura_mensagens_toggle_event, INFINITE);
-			printf("\n thread captura mensagens desbloqueada.\n");
+
+            ret = WaitForMultipleObjects(2, Events, FALSE, INFINITE);
+
+            event_id = ret - WAIT_OBJECT_0;
+
+			if(event_id == 0){printf("\n thread captura de dados desbloqueada.\n");}
 
 		}
 
