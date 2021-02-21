@@ -27,7 +27,7 @@ __inline void CheckReturn(LPSTR FileName, int Line)
 				(LPTSTR)&lpMsgBuff,  // Aloca o buffer dinamicamente
 				0,
 				NULL);
-	sprintf(OutBuffer, "\nErro: %s Arquivo %s Linha %d\n",lpMsgBuff, FileName, Line);
+	sprintf_s(OutBuffer, "\nErro: %s Arquivo %s Linha %d\n",lpMsgBuff, FileName, Line);
 #ifndef	_WINDOWS // Modo Console
 	printf("%s", OutBuffer);
 #else			 // Modo Windows

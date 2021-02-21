@@ -20,18 +20,18 @@ __inline void CheckReturn(LPSTR FileName, int Line)
 
 	// Traduz retorno de GetLastError em um string !!!
 	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER
-				| FORMAT_MESSAGE_FROM_SYSTEM,
-				NULL,
-				GetLastError(),
-				LANG_NEUTRAL,
-				(LPTSTR)&lpMsgBuff,  // Aloca o buffer dinamicamente
-				0,
-				NULL);
-	sprintf(OutBuffer, "\nErro: %s Arquivo %s Linha %d\n",lpMsgBuff, FileName, Line);
+		| FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL,
+		GetLastError(),
+		LANG_NEUTRAL,
+		(LPTSTR)&lpMsgBuff,  // Aloca o buffer dinamicamente
+		0,
+		NULL);
+	sprintf(OutBuffer, "\nErro: %s Arquivo %s Linha %d\n", lpMsgBuff, FileName, Line);
 #ifndef	_WINDOWS // Modo Console
 	printf("%s", OutBuffer);
 #else			 // Modo Windows
-	MessageBox(NULL, OutBuffer, "ERRO", MB_ICONWARNING|MB_OK|MB_TASKMODAL|MB_SETFOREGROUND);
+	MessageBox(NULL, OutBuffer, "ERRO", MB_ICONWARNING | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
 #endif
 	exit(EXIT_FAILURE);
 #endif

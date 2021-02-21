@@ -1,2 +1,4 @@
 C:\Users\Gabriel\Desktop\ATR\tepe\projeto\granulometria\Debug\granulometria.exe
 C:\Users\Gabriel\Desktop\ATR\tepe\projeto\granulometria\Debug\granulometria.pdb
+C:\Users\Léiza\Desktop\tp\pelotizacao\projeto\granulometria\Debug\granulometria.exe
+C:\Users\Léiza\Desktop\tp\pelotizacao\projeto\granulometria\Debug\granulometria.pdb
