@@ -125,7 +125,7 @@ int main()
     /* cria evento com reset manual para encerramento */
 
     end_event = CreateEvent(NULL, TRUE, FALSE, TEXT("end_event")); // esse evento eh nomeado para compartilhamento interprocessos
-    //
+    
    //CheckForError(end_event);
 
     /* cria threads */
@@ -167,7 +167,7 @@ int main()
     /* cria processo de exibicao de dados */
 
     status = CreateProcess(
-        "C:\\Users\\Léiza\\Desktop\\tp\\pelotizacao\\projeto\\exibe_dados\\exibe_dados.exe",
+        "..\\exibe_dados\\exibe_dados.exe",
         NULL,
         NULL,
         NULL,
@@ -183,7 +183,7 @@ int main()
     /* cria processo de analise de granulometria */
 
     status = CreateProcess(
-        "C:\\Users\\Léiza\\Desktop\\tp\\pelotizacao\\projeto\\analise_granulometria\\analise_granulometria.exe",
+        "..\\analise_granulometria\\analise_granulometria.exe",
         NULL,
         NULL,
         NULL,
@@ -262,6 +262,7 @@ DWORD WINAPI leitura_medicao(LPVOID id)
     /* para permitir que essa thread encerre se bloqueada ao tentar escrever no buffer */
 
     HANDLE buffer_block_objects[2] = { sem_livre, end_event };
+    LONG previous_ocuppied_count = 0;
     DWORD ret;
     int event_id = 0;
 
@@ -271,7 +272,17 @@ DWORD WINAPI leitura_medicao(LPVOID id)
 
         /* TODO: preencher valor de timeout. se nao ha no momento da verificacao, a thread aguarda por timeout milisegundos
          e se bloqueia por que o buffer estava cheio */
+        
+        /* if(previous_ocuppied_count == 9){ */
 
+        /*     printf("\nThread leitora de medicao tentou depositar informacao mas buffer estava cheio. Se bloqueando ate livrar espaco\n"); */
+
+        /*     ret = WaitForMultipleObjects(2, buffer_block_objects, FALSE, INFINITE); */
+
+        /*     if (ret == 1) { break; } */
+
+        /* } */
+        
         ret = WaitForSingleObject(sem_livre, timeout);
 
         if (ret == WAIT_TIMEOUT) {
@@ -305,7 +316,8 @@ DWORD WINAPI leitura_medicao(LPVOID id)
 
         ReleaseSemaphore(sem_rw, 1, NULL);
 
-        ReleaseSemaphore(sem_ocupado, 1, NULL);
+        ReleaseSemaphore(sem_ocupado, 1, &previous_ocuppied_count);
+
 
         /* TODO:adiciona valor de timout espera por 1 s por objeto de toggle ou finalizador
          como os sinais de toggle e finalizacao sao acionados pela funcao SetEvent, sempre que o sinal for
@@ -353,15 +365,26 @@ DWORD WINAPI leitura_dados(LPVOID id)
 {
     HANDLE Events[2] = { leitura_dados_toggle_event, end_event };
     HANDLE buffer_block_objects[2] = { sem_livre, end_event };
+    LONG previous_ocuppied_count = 0;
     DWORD ret;
-    int event_id = 0;
 
+    int event_id = 0;
 
     do {
 
         /* char* time = show_time(); essa linha estava quebrando o codigo! investigar depois.*/
 
         /* espera ter posicoes livres */
+
+        /* if(previous_ocuppied_count == 9){ */
+        /*     printf("\nThread leitora de dados tentou depositar informacao mas buffer estava cheio. Se bloqueando ate livrar espaco\n"); */
+
+        /*     ret = WaitForMultipleObjects(2, buffer_block_objects, FALSE, INFINITE); */
+
+        /*     if (ret == 1) { break; } */
+
+        /* } */
+
         ret = WaitForSingleObject(sem_livre, timeout);
 
         if (ret == WAIT_TIMEOUT) {
@@ -370,6 +393,7 @@ DWORD WINAPI leitura_dados(LPVOID id)
             if (ret == 1) { break; }
 
         }
+        
         /* espera mutex para acessar buffer */
         WaitForSingleObject(sem_rw, INFINITE);
 
@@ -382,7 +406,7 @@ DWORD WINAPI leitura_dados(LPVOID id)
 
         ReleaseSemaphore(sem_rw, 1, NULL);
 
-        ReleaseSemaphore(sem_ocupado, 1, NULL);
+        ReleaseSemaphore(sem_ocupado, 1, &previous_ocuppied_count);
         /* espera por 1 s por objeto de toggle ou finalizador */
 
         Sleep(1000);
@@ -428,6 +452,7 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 
         /* logica padrao da thread */
 
+        /* TODO: implementar timeout aqui */
         WaitForSingleObject(sem_ocupado, INFINITE);
         /* espera mutex para acessar buffer */
         WaitForSingleObject(sem_rw, INFINITE);
