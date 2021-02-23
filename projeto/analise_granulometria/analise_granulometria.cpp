@@ -10,7 +10,7 @@ int main() {
     HANDLE end_event = OpenEvent(EVENT_ALL_ACCESS, TRUE, TEXT("end_event"));
     HANDLE toggle_event = OpenEvent(EVENT_ALL_ACCESS, TRUE, TEXT("analise_granulometria_toggle_event"));
 
-    /* no momento esta retornando 0 */
+    printf("\nProcesso analise de granulometria disparado\n");
 
     HANDLE events[2] = { toggle_event, end_event };
 
@@ -18,7 +18,6 @@ int main() {
 
         Sleep(1000);
 
-        printf("\nProcesso analise de granulometria\n");
 
         ret = WaitForMultipleObjects(2, events, FALSE, 100);
 
@@ -40,7 +39,5 @@ int main() {
         }
 
     } while (event_id != 1);
-
-    printf("Sinal de finalizacao recebido");
 
 };
