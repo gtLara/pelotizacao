@@ -292,6 +292,8 @@ DWORD WINAPI leitura_medicao(LPVOID id)
 
             ret = WaitForMultipleObjects(2, buffer_block_objects, FALSE, INFINITE);
 
+            ret = ret - WAIT_OBJECT_0;
+
             if (ret == 1) { break; }
         }
 
@@ -318,8 +320,7 @@ DWORD WINAPI leitura_medicao(LPVOID id)
 
         ReleaseSemaphore(sem_ocupado, 1, &previous_ocuppied_count);
 
-
-        /* TODO:adiciona valor de timout espera por 1 s por objeto de toggle ou finalizador
+        /* TODO:adiciona valor de timout espera por .1 s por objeto de toggle ou finalizador
          como os sinais de toggle e finalizacao sao acionados pela funcao SetEvent, sempre que o sinal for
          dado esta thread vai na proxima execucao (ou no intervalo de timeout) detecta-lo e manifestar o comportamento
          desejado. a funcao na realidade mais confere do que espera, como mencionado no comentario anterior */
@@ -390,6 +391,7 @@ DWORD WINAPI leitura_dados(LPVOID id)
         if (ret == WAIT_TIMEOUT) {
             printf("\nThread leitora de dados tentou depositar informacao mas buffer estava cheio. Se bloqueando ate livrar espaco\n");
             ret = WaitForMultipleObjects(2, buffer_block_objects, FALSE, INFINITE);
+            ret = ret - WAIT_OBJECT_0;
             if (ret == 1) { break; }
 
         }
@@ -444,6 +446,7 @@ DWORD WINAPI leitura_dados(LPVOID id)
 DWORD WINAPI captura_mensagens(LPVOID id)
 {
     HANDLE Events[2] = { captura_mensagens_toggle_event, end_event };
+    HANDLE buffer_block_objects[2] = { sem_ocupado, end_event };
     DWORD ret;
     int event_id = 0;
 
@@ -452,8 +455,14 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 
         /* logica padrao da thread */
 
-        /* TODO: implementar timeout aqui */
-        WaitForSingleObject(sem_ocupado, INFINITE);
+        ret = WaitForSingleObject(sem_ocupado, timeout);
+
+        if(ret == WAIT_TIMEOUT){
+            ret = WaitForMultipleObjects(2, buffer_block_objects, FALSE, INFINITE);
+            ret = ret - WAIT_OBJECT_0;
+            if (ret == 1) { break; }
+        }
+
         /* espera mutex para acessar buffer */
         WaitForSingleObject(sem_rw, INFINITE);
 
