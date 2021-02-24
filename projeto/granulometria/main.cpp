@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <process.h>	// _beginthreadex() e _endthreadex() 
 #include <conio.h>		// _getch
+#include <locale.h>
 
 //#define _CHECKERROR	1		
 //#include "CheckForError.h"
@@ -12,7 +13,7 @@
 typedef unsigned (WINAPI* CAST_FUNCTION)(LPVOID);
 typedef unsigned* CAST_LPDWORD;
 
-/* define teclas para controle de bloqueio de threads */
+/* define teclas para controle de bloqueio e desbloqueio de threads */
 
 #define	ESC			    0x1B
 #define	tecla_g			0x67
@@ -63,6 +64,8 @@ char* show_time();
 
 int main()
 {
+    // Habilitando acentuacão gráfica
+    setlocale(LC_ALL, "Portuguese"); 
 
     /* declara variaveis necessarias para criacao processos secundarios */
 
@@ -83,16 +86,13 @@ int main()
     ZeroMemory(&si_analise_granulometria, sizeof(si_analise_granulometria));
     si_analise_granulometria.cb = sizeof(si_analise_granulometria);	// Tamanho da estrutura em bytes
 
-    /* cria semaforos para sincronizacao de escrita e leitura de primeira lista circular em memoria */
+    /* Cria semáforos para sincronização de escrita e leitura da primeira lista circular em memória */
 
     sem_livre = CreateSemaphore(NULL, buffer_size, buffer_size, NULL);
-    //CheckForError(sem_livre);
 
     sem_ocupado = CreateSemaphore(NULL, 0, buffer_size, NULL);
-    //CheckForError(sem_ocupado);
 
     sem_rw = CreateSemaphore(NULL, 1, 1, NULL);
-    //CheckForError(sem_rw);
 
     /* declara threads */
 
@@ -108,25 +108,22 @@ int main()
     /* cria eventos para bloqueio e desbloqueio com reset automatico */
 
     leitura_dados_toggle_event = CreateEvent(NULL, FALSE, FALSE, NULL);
-    //CheckForError(leitura_dados_toggle_event);
 
     leitura_medicao_toggle_event = CreateEvent(NULL, FALSE, FALSE, NULL);
-    //CheckForError(leitura_medicao_toggle_event);
 
     captura_mensagens_toggle_event = CreateEvent(NULL, FALSE, FALSE, NULL);
-    //CheckForError(captura_mensagens_toggle_event);
 
-    exibe_dados_toggle_event = CreateEvent(NULL, FALSE, FALSE, TEXT("exibe_dados_toggle_event")); // esse evento eh nomeado para compartilhamento interprocessos
-    //CheckForError(exibe_dados_toggle_event);
+    // esse evento é nomeado para compartilhamento interprocessos
+    exibe_dados_toggle_event = CreateEvent(NULL, FALSE, FALSE, TEXT("exibe_dados_toggle_event")); 
 
-    analise_granulometria_toggle_event = CreateEvent(NULL, FALSE, FALSE, TEXT("analise_granulometria_toggle_event"));   // esse evento eh nomeado para compartilhamento interprocessos
-    //CheckForError(analise_granulometria_toggle_event);
+    // esse evento é nomeado para compartilhamento interprocessos
+    analise_granulometria_toggle_event = CreateEvent(NULL, FALSE, FALSE, TEXT("analise_granulometria_toggle_event"));   
 
     /* cria evento com reset manual para encerramento */
 
-    end_event = CreateEvent(NULL, TRUE, FALSE, TEXT("end_event")); // esse evento eh nomeado para compartilhamento interprocessos
+    // esse evento eé nomeado para compartilhamento interprocessos
+    end_event = CreateEvent(NULL, TRUE, FALSE, TEXT("end_event")); 
     
-   //CheckForError(end_event);
 
     /* cria threads */
 
@@ -136,7 +133,6 @@ int main()
         (CAST_LPDWORD)&thread_leitura_medicao_id
     );
 
-    //CheckForError(thread_leitura_medicao);
 
     thread_leitura_dados = (HANDLE)_beginthreadex(NULL, 0, (CAST_FUNCTION)leitura_dados,
         (LPVOID)0,
@@ -144,7 +140,6 @@ int main()
         (CAST_LPDWORD)&thread_leitura_dados_id
     );
 
-    //CheckForError(thread_leitura_dados);
 
     thread_captura_mensagens = (HANDLE)_beginthreadex(NULL, 0, (CAST_FUNCTION)captura_mensagens,
         (LPVOID)0,
@@ -152,19 +147,17 @@ int main()
         (CAST_LPDWORD)&thread_captura_mensagens_id
     );
 
-    //CheckForError(thread_captura_mensagens);
-
 
     HANDLE threads[3] = { thread_leitura_medicao, thread_leitura_dados, thread_captura_mensagens };
 
-    /* curioso: se o vetor acima for criado antes das atribuicoes das threads acima a main nao espera o termino
-     * das threads por meio da funcao WaitForMultipleObjects */
+    /* Curiosidade: se o vetor acima for criado antes das atribuições das threads, a main não espera o término
+     * das threads por meio da função WaitForMultipleObjects */
 
     if (thread_leitura_medicao) printf("thread leitura de medicao criada com id = %0x \n", thread_leitura_medicao_id);
     if (thread_leitura_dados) printf("thread leitura dados criada com id = %0x \n", thread_leitura_dados_id);
     if (thread_captura_mensagens) printf("thread captura mensagens criada com id = %0x \n", thread_captura_mensagens_id);
 
-    /* cria processo de exibicao de dados */
+    /* Cria processo de exibição de dados */
 
     status = CreateProcess(
         "..\\exibe_dados\\exibe_dados.exe",
@@ -178,9 +171,9 @@ int main()
         &si_exibe_dados,
         &NewProcess);
 
-    if (!status) printf("Erro na criacao do processo! Codigo = %d\n", GetLastError());
+    if (!status) printf("Erro na criação do processo! Código = %d\n", GetLastError());
 
-    /* cria processo de analise de granulometria */
+    /* Cria processo de análise de granulometria */
 
     status = CreateProcess(
         "..\\analise_granulometria\\analise_granulometria.exe",
@@ -194,7 +187,7 @@ int main()
         &si_analise_granulometria,
         &NewProcess);
 
-    if (!status) printf("Erro na criacao do processo! Codigo = %d\n", GetLastError());
+    if (!status) printf("Erro na criação do processo! Código = %d\n", GetLastError());
 
     char key;
 
@@ -202,7 +195,23 @@ int main()
 
     /* para bloquear as threads eh utilizado SetEvent, lembrando que o sinal eh consumido por ser do tipo resetautomatico */
 
-    printf("\n tecla g: leitura de medicao \n tecla c: leitura de dados \n tecla r: captura de mensagens \n tecla p: exibe dados \n tecla a: analise de granulometria \n esc para encerrar\n");
+    printf("\n___________________________________________________"
+        "\n SISTEMA DE CONTROLE E SUPERVISÃO"
+        "\n___________________________________________________"
+        "\n Processo de pelotização e medição de granulometria"
+        "\n..................................................."
+        "\n Bloqueio/retomada da execução de tarefas:"
+        "\n Tecla g: Tarefa de leitura de dados de medição"
+        "\n Tecla c: Tarefa de leitura de dados de processo"
+        "\n Tecla r: Tarefa de captura de mensagens"
+        "\n Tecla p: Tarefa de exibição de dados de processo"
+        "\n Tecla a: Tarefa de análise de granulometria"
+        "\n..................................................."
+        "\n Para encerrar o processo: ESC"
+        "\n___________________________________________________\n");
+        
+    /* bloqueio/desbloqueido das threads caso criadas com resetautomatico */
+
     do {
 
         key = _getch();
@@ -230,11 +239,11 @@ int main()
 
     SetEvent(end_event);
 
-    /* aguarda termino de threads */
+    /* aguarda término de threads */
 
     WaitForMultipleObjects(3, threads, TRUE, INFINITE);
 
-    /* destroi handles threads */
+    /* destrói handles threads */
 
     CloseHandle(thread_leitura_medicao);
     CloseHandle(thread_leitura_dados);
@@ -244,7 +253,9 @@ int main()
     CloseHandle(captura_mensagens_toggle_event);
     CloseHandle(end_event);
 
-    printf("\nprocesso encerrando\n");
+    printf("\n___________________________________________________"
+        "\n              Processo encerrando."
+        "\n___________________________________________________");
 
     return EXIT_SUCCESS;
 }  // main
@@ -253,13 +264,13 @@ int main()
 
 DWORD WINAPI leitura_medicao(LPVOID id)
 {
-    /* cria arrays para funcoes WaitForMultipleObjects */
+    /* cria arrays para funçõeses WaitForMultipleObjects */
 
     /* para fazer o toggle desta thread */
 
     HANDLE Events[2] = { leitura_medicao_toggle_event, end_event };
 
-    /* para permitir que essa thread encerre se bloqueada ao tentar escrever no buffer */
+    /* para permitir que essa thread encerre, se bloqueada ao tentar escrever no buffer */
 
     HANDLE buffer_block_objects[2] = { sem_livre, end_event };
     LONG previous_ocuppied_count = 0;
@@ -286,9 +297,12 @@ DWORD WINAPI leitura_medicao(LPVOID id)
         ret = WaitForSingleObject(sem_livre, timeout);
 
         if (ret == WAIT_TIMEOUT) {
-            /* se timeout o buffer nao estava com posicoes imediatamente livre e a thread se bloqueia */
+            /* se timeout, o buffer não estava com posições imediatamente livres e a thread se bloqueia */
 
-            printf("\nThread leitora de medicao tentou depositar informacao mas buffer estava cheio. Se bloqueando ate livrar espaco\n");
+            printf("\n************************************************************************************************************"
+                "\nCapacidade máxima da primeira lista circular em memória atingida."
+                "\nThread de leitura do sistema de medição tentou depositar informação e está se bloqueando até livrar posição."
+                "\n************************************************************************************************************\n");
 
             ret = WaitForMultipleObjects(2, buffer_block_objects, FALSE, INFINITE);
 
@@ -297,24 +311,24 @@ DWORD WINAPI leitura_medicao(LPVOID id)
             if (ret == 1) { break; }
         }
 
-        /* espera semaforo binario para acessar buffer */
+        /* espera semáforo binário para acessar buffer */
 
         WaitForSingleObject(sem_rw, INFINITE);
 
-        /* indexacao circular */
+        /* indexação circular */
 
         int index = p_livre % buffer_size;
 
-        /* deposita informacao e incrementa apontador para posicao livre */
+        /* deposita informação e incrementa apontador para posição livre na lista circular */
 
         buffer[index] = medicao_counter;
         p_livre++;
 
-        printf("\nThread leitora de medicao depositou informacao %i em buffer[%i]\n", medicao_counter, index);
+        printf("\nThread leitora de medição de granulometria depositou informação %i em buffer[%i]\n", medicao_counter, index);
 
         medicao_counter += 2;
 
-        /* libera sempaforo binario de acesso ao buffer */
+        /* libera semáforo binário de acesso ao buffer */
 
         ReleaseSemaphore(sem_rw, 1, NULL);
 
@@ -328,31 +342,36 @@ DWORD WINAPI leitura_medicao(LPVOID id)
         Sleep(1000);
         ret = WaitForMultipleObjects(2, Events, FALSE, timeout);
 
-        /* se tiver esperado o tempo limite, prosseguir com logica */
+        /* caso espere o tempo limite, prosseguir com lógica */
 
         if (ret == WAIT_TIMEOUT) {
             continue;
         }
 
-        /* se nao, se bloqueia ou sai do laco para encerrar execucao*/
+        /* caso contrário, se bloqueia ou sai do laço para encerrar execução */
 
         event_id = ret - WAIT_OBJECT_0;
 
         if (event_id == 0) {
 
-            printf("\n thread leitura granulometria bloqueada. para desbloquear, aperte uma outra tecla qualquer \n");
+            printf("\n...................................................................................."
+                    "\nTarefa LEITURA DO SISTEMA DE MEDIÇÃO *BLOQUEADA*. Para desbloquear, tecle <g>."
+                    "\n....................................................................................\n");
 
             ret = WaitForMultipleObjects(2, Events, FALSE, INFINITE);
 
             event_id = ret - WAIT_OBJECT_0;
 
-            if (event_id == 0) { printf("\n thread leitura granulometria desbloqueada.\n"); }
+            if (event_id == 0) { 
+                printf("\n...................................................................................."
+                "\nTarefa LEITURA DO SISTEMA DE MEDIÇÃO *DESBLOQUEADA*."
+                "\n....................................................................................\n"); }
 
         }
 
     } while (event_id != 1);
 
-    printf("\nprocesso leitura de medicao encerrando\n");
+    printf("\nTarefa de leitura do sistema de medição encerrando.\n");
 
     /* se encerra */
 
@@ -389,7 +408,10 @@ DWORD WINAPI leitura_dados(LPVOID id)
         ret = WaitForSingleObject(sem_livre, timeout);
 
         if (ret == WAIT_TIMEOUT) {
-            printf("\nThread leitora de dados tentou depositar informacao mas buffer estava cheio. Se bloqueando ate livrar espaco\n");
+            printf("\n************************************************************************************************************"
+                "\nCapacidade máxima da primeira lista circular em memória atingida."
+                "\nThread de leitura de dados do processo tentou depositar informação e está se bloqueando até livrar posição."
+                "\n************************************************************************************************************\n");
             ret = WaitForMultipleObjects(2, buffer_block_objects, FALSE, INFINITE);
             ret = ret - WAIT_OBJECT_0;
             if (ret == 1) { break; }
@@ -403,7 +425,7 @@ DWORD WINAPI leitura_dados(LPVOID id)
         buffer[index] = data_counter;
         p_livre++;
 
-        printf("\nThread leitora de dados depositou informacao %i em buffer[%i]\n", data_counter, index);
+        printf("\nThread leitora de dados de processo depositou informação %i em buffer[%i]\n", data_counter, index);
         data_counter += 2;
 
         ReleaseSemaphore(sem_rw, 1, NULL);
@@ -414,29 +436,34 @@ DWORD WINAPI leitura_dados(LPVOID id)
         Sleep(1000);
         ret = WaitForMultipleObjects(2, Events, FALSE, timeout);
 
-        /* se tiver esperado o tempo limite, prosseguir com logica */
+        /* caso espere o tempo limite, prosseguir com lógica */
 
         if (ret == WAIT_TIMEOUT) {
             continue;
         }
 
-        /* se nao, executar comportamento demandado */
+        /* caso contrário, executar comportamento demandado */
 
         event_id = ret - WAIT_OBJECT_0;
         if (event_id == 0) {
 
-            printf("\n thread leitura dados bloqueada. para desbloquear, aperte uma outra tecla qualquer \n");
+            printf("\n...................................................................................."
+                    "\nTarefa LEITURA DE DADOS DO PROCESSO *BLOQUEADA*. Para desbloquear, tecle <c>."
+                    "\n....................................................................................\n");
 
             ret = WaitForMultipleObjects(2, Events, FALSE, INFINITE);
 
             event_id = ret - WAIT_OBJECT_0;
 
-            if (event_id == 0) { printf("\n thread leitura dados desbloqueada.\n"); }
+            if (event_id == 0) { 
+                printf("\n...................................................................................."
+                "\nTarefa LEITURA DE DADOS DO PROCESSO *DESBLOQUEADA*."
+                "\n....................................................................................\n"); }
         }
 
     } while (event_id != 1);
 
-    printf("\nprocesso leitura de dados encerrando\n");
+    printf("\nTarefa de leitura de dados de processo encerrando.\n");
 
     _endthreadex((DWORD)0);
 
@@ -453,7 +480,7 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 
     do {
 
-        /* logica padrao da thread */
+        /* lógica padrão da thread */
 
         ret = WaitForSingleObject(sem_ocupado, timeout);
 
@@ -468,7 +495,7 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 
         int index = p_ocupado % buffer_size;
         int data = buffer[index];
-        printf("\nThread capturadora de mensagens leu informacao %i em buffer[%i]\n", data, index);
+        printf("\nThread capturadora de mensagens leu informação %i em buffer[%i]\n", data, index);
         p_ocupado++;
 
         ReleaseSemaphore(sem_rw, 1, NULL);
@@ -480,32 +507,37 @@ DWORD WINAPI captura_mensagens(LPVOID id)
         Sleep(1000);
         ret = WaitForMultipleObjects(2, Events, FALSE, timeout);
 
-        /* se tiver esperado o tempo limite, prosseguir com logica */
+        /* caso espere o tempo limite, prosseguir com lógica */
 
         if (ret == WAIT_TIMEOUT) {
             continue;
         }
 
-        /* se nao, bloquear */
+        /* caso contrário, bloquear */
 
         event_id = ret - WAIT_OBJECT_0;
         if (event_id == 0) {
 
-            printf("\n thread captura mensagens bloqueada. para desbloquear, aperte uma outra tecla qualquer \n");
+            printf("\n...................................................................................."
+                "\nTarefa CAPTURA DE MENSAGENS *BLOQUEADA*. Para desbloquear, tecle <r>."
+                "\n....................................................................................\n");
 
             ret = WaitForMultipleObjects(2, Events, FALSE, INFINITE);
 
             event_id = ret - WAIT_OBJECT_0;
 
-            if (event_id == 0) { printf("\n thread captura de dados desbloqueada.\n"); }
+            if (event_id == 0) { 
+                printf("\n...................................................................................."
+                    "\nTarefa CAPTURA DE MENSAGENS *DESBLOQUEADA*."
+                    "\n....................................................................................\n"); }
 
         }
 
-        /* enquanto Esc nao for pressionado */
+        /* enquanto Esc não for pressionado */
 
     } while (event_id != 1);
 
-    printf("\nprocesso captura de dados encerrando\n");
+    printf("\nTarefa de captura de dados encerrando.\n");
     _endthreadex((DWORD)0);
 
     return(0);
