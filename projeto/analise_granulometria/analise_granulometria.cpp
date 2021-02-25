@@ -2,8 +2,12 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<process.h>
+#include<locale.h>
 
 int main() {
+
+    // Habilitando acentuacão gráfica
+    setlocale(LC_ALL, "Portuguese");
 
     int event_id = -1;
     DWORD ret;
@@ -28,13 +32,18 @@ int main() {
         event_id = ret - WAIT_OBJECT_0;
 
         if (event_id == 0) {
-            printf("\nProcesso analise de granulometria bloqueando\n");
+            printf("\n...................................................................................."
+                    "\nProcesso ANÁLISE DE GRANULOMETRIA *BLOQUEADO*. Para desbloquear, tecle <a>."
+                    "\n....................................................................................\n");
 
             ret = WaitForMultipleObjects(2, events, FALSE, INFINITE);
 
             event_id = ret - WAIT_OBJECT_0;
 
-            if (event_id == 0) { printf("\nProcesso analise de granulometria desbloqueado\n"); }
+            if (event_id == 0) { 
+                printf("\n...................................................................................."
+                    "\nProcesso ANÁLISE DE GRANULOMETRIA *DESBLOQUEADO*."
+                    "\n....................................................................................\n"); }
 
         }
 
