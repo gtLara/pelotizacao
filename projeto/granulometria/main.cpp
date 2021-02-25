@@ -38,7 +38,7 @@ HANDLE sem_rw;
 
 /* cria variaveis necessarias para sincronizacao */
 
-const int buffer_size = 10;
+const int buffer_size = 200;
 int p_livre = 0;
 int p_ocupado = 0;
 int timeout = 100;
