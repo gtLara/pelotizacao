@@ -1,8 +1,0 @@
-A solução do Visual Studio está dividida em três projetos. A abetura da
-solução no Visual Studio deve ser feita carregando o arquivo
-
-"projeto/granulometria/granulometria.sln"
-
-Dessa forma os outros projetos são carregados da maneira correta.
-
-Em seguida compila-se o programa com a função build.
