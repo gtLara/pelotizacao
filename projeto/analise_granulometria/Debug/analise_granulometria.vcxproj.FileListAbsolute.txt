@@ -1,3 +1,0 @@
-C:\Users\Gabriel\Desktop\ATR\tepe\projeto\analise_granulometria\Debug\analise_granulometria.exe
-C:\Users\Gabriel\Desktop\ATR\tepe\projeto\analise_granulometria\Debug\analise_granulometria.pdb
-C:\Users\Gabriel\Desktop\ATR\tepe\projeto\granulometria\Debug\analise_granulometria.pdb
