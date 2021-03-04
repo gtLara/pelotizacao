@@ -195,6 +195,8 @@ int main()
 
     WaitForSingleObject(exibe_dados_mailslot_event, INFINITE);
 
+    /* abre mailslot de processe de exibicao de dados */
+
     HANDLE mailslot = CreateFile(
                                  "\\\\.\\mailslot\\exibe_dados_mailslot",
                                 GENERIC_WRITE,
@@ -207,17 +209,10 @@ int main()
                   
     CheckForError(mailslot != INVALID_HANDLE_VALUE);
 
-    int signal = 40;
-    printf("\n Enviando dados para tarefa de exibicao de processos");
-    WriteFile(mailslot, &signal, sizeof(int), &sent_bytes, NULL);
-
-    printf("\nBytes enviados para tarefa de exibicao de processos: %d\n", sent_bytes);
-
     char key;
+    int exibicao_de_processos_clear_screen_signal = 1;
 
     /* imprime na tecla opcoes de bloqueio */
-
-    /* para bloquear as threads eh utilizado SetEvent, lembrando que o sinal eh consumido por ser do tipo resetautomatico */
 
     printf("\n___________________________________________________"
         "\n SISTEMA DE CONTROLE E SUPERVISÃO"
@@ -230,6 +225,8 @@ int main()
         "\n Tecla r: Tarefa de captura de mensagens"
         "\n Tecla p: Tarefa de exibição de dados de processo"
         "\n Tecla a: Tarefa de análise de granulometria"
+        "\n..................................................."
+        "\n Tecla l: Limpar tela de monitor de exibição de dados de processo"
         "\n..................................................."
         "\n Para encerrar o processo: ESC"
         "\n___________________________________________________\n");
@@ -255,6 +252,9 @@ int main()
             break;
         case tecla_a:
             SetEvent(analise_granulometria_toggle_event);
+            break;
+        case tecla_l:
+            WriteFile(mailslot, &exibicao_de_processos_clear_screen_signal, sizeof(int), &sent_bytes, NULL);
             break;
         }
     } while (key != ESC);
@@ -283,7 +283,6 @@ int main()
 
     return EXIT_SUCCESS;
 }  // main
-
 
 
 DWORD WINAPI leitura_medicao(LPVOID id)
