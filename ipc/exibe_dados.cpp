@@ -2,8 +2,9 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<process.h>
+#include<locale.h>
 
-#define _CHECKERROR	1
+#define _CHECKERROR     1
 #include "CheckForError.h"
 
 /* funcao que limpa saida de console */
@@ -50,7 +51,11 @@ void clear_screen(){
 
 }
 
-int main(){
+
+int main() {
+
+    // Habilitando acentuacão gráfica
+    setlocale(LC_ALL, "Portuguese");
 
     int event_id = -1;
     DWORD ret;
@@ -69,49 +74,52 @@ int main(){
 
     CheckForError(mailslot != INVALID_HANDLE_VALUE);
 
-    /* sinaliza para cliente que mailslot foi criado */
+    // sinaliza para cliente que mailslot esta pronto
 
     SetEvent(mailslot_event);
 
-    /* no momento esta retornando 0 */
+    HANDLE events[2] = { toggle_event, end_event };
 
-    HANDLE events[2] = {toggle_event, end_event};
+    printf("\nProcesso de exibe dados de processo disparado\n");
 
+    do {
 
-    do{
+        Sleep(1000);
 
-    Sleep(1000);
+    	int signal = 0;
 
-    int signal = 0;
+    	bool status = ReadFile(mailslot, &signal, sizeof(int), NULL, NULL);
 
-    bool status = ReadFile(mailslot, &signal, sizeof(int), NULL, NULL);
+    	printf("\nSinal recebido:%i\n", signal);
 
-    printf("\nSinal recebido:%i\n", signal);
+    	if(signal) clear_screen();
 
-    if(signal) clear_screen();
+        ret = WaitForMultipleObjects(2, events, FALSE, 100);
 
-    ret = WaitForMultipleObjects(2, events, FALSE, 100);
-
-    if(ret == WAIT_TIMEOUT){
-        continue;
-    }
-
-    event_id = ret - WAIT_OBJECT_0;
-
-    if(event_id == 0){
-        printf("\nProcesso exibicao de dados de processo bloqueando\n");
-
-        ret = WaitForMultipleObjects(2, events, FALSE, INFINITE);
+        if (ret == WAIT_TIMEOUT) {
+            continue;
+        }
 
         event_id = ret - WAIT_OBJECT_0;
 
-        if(event_id == 0){printf("\nProcesso exibicao de dados desbloqueado\n");}
+        if (event_id == 0) {
+            printf("\n...................................................................................."
+                    "\nProcesso EXIBIÇÃO DE DADOS DE PROCESSO *BLOQUEADO*. Para desbloquear, tecle <p>."
+                    "\n....................................................................................\n");
+
+            ret = WaitForMultipleObjects(2, events, FALSE, INFINITE);
+
+            event_id = ret - WAIT_OBJECT_0;
+
+            if (event_id == 0) { 
+                printf("\n...................................................................................."
+                    "\nProcesso EXIBIÇÃO DE DADOS DE PROCESSO *DESBLOQUEADO*."
+                    "\n....................................................................................\n"); }
 
         }
 
-    }while(event_id != 1);
-
-    printf("Sinal de finalizacao recebido");
+    } while (event_id != 1);
 
 };
+
 
