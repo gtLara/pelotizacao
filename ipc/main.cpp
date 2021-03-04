@@ -31,10 +31,11 @@ HANDLE captura_mensagens_toggle_event;
 HANDLE exibe_dados_toggle_event;
 HANDLE analise_granulometria_toggle_event;
 
-/* cria handles para eventos de ipc */
+/* cria handles para ipc */
 
 HANDLE exibe_dados_mailslot_event;
 DWORD sent_bytes;
+
 
 /* cria handles para semaforos para sincronizacao da lista circular 1 */
 
@@ -45,9 +46,22 @@ HANDLE sem_rw;
 /* cria variaveis necessarias para sincronizacao */
 
 const int buffer_size = 200;
+const int buffer_2_size = 100;
 int p_livre = 0;
 int p_ocupado = 0;
 int timeout = 100;
+
+/* cria segunda lista mapeada em memoria */
+
+/* global para thread captura de mensagens acessar */
+
+HANDLE mapped_memory = CreateFileMapping(
+                                          (HANDLE)0xFFFFFFFF,
+                                          NULL,
+                                          PAGE_READWRITE,
+                                          0,
+                                          sizeof(int)*buffer_2_size,
+                                          "lista_2");
 
 /* cria variaveis de processo */
 
@@ -78,10 +92,6 @@ int main()
     STARTUPINFO si_exibe_dados;
     STARTUPINFO si_analise_granulometria;
     PROCESS_INFORMATION NewProcess;
-
-    /* define titulo para console principal */
-
-    //SetConsoleTitle("Console Principal");
 
     /* define tamanho das estruturas em bytes */
 
@@ -126,9 +136,11 @@ int main()
 
     /* cria evento com reset manual para encerramento */
 
-    // esse evento eé nomeado para compartilhamento interprocessos
     end_event = CreateEvent(NULL, TRUE, FALSE, TEXT("end_event")); 
-    
+
+    /* cria segunda lista compartilhada em memoria */
+
+
     /* cria threads */
 
     thread_leitura_medicao = (HANDLE)_beginthreadex(NULL, 0, (CAST_FUNCTION)leitura_medicao,
@@ -495,11 +507,21 @@ DWORD WINAPI leitura_dados(LPVOID id)
 
 DWORD WINAPI captura_mensagens(LPVOID id)
 {
+    
     HANDLE Events[2] = { captura_mensagens_toggle_event, end_event };
     HANDLE buffer_block_objects[2] = { sem_ocupado, end_event };
     DWORD ret;
     int event_id = 0;
+    int * lista_2_local; 
 
+    lista_2_local = (int*)MapViewOfFile(
+                                        mapped_memory,
+                                        FILE_MAP_WRITE,
+                                        0,
+                                        0,
+                                        sizeof(int) * buffer_2_size);
+
+    CheckForError(lista_2_local);
 
     do {
 
@@ -518,7 +540,16 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 
         int index = p_ocupado % buffer_size;
         int data = buffer[index];
-        printf("\nThread capturadora de mensagens leu informação %i em buffer[%i]\n", data, index);
+
+        int second_list_index = 0;
+
+        if(data % 2 == 0){
+            printf("\nThread capturadora de mensagens leu informação %i em buffer[%i]\n", data, index);
+        }else{
+            lista_2_local[second_list_index] = data;
+            second_list_index++;
+        };
+
         p_ocupado++;
 
         ReleaseSemaphore(sem_rw, 1, NULL);
