@@ -53,15 +53,27 @@ int timeout = 100;
 
 /* cria segunda lista mapeada em memoria */
 
-/* global para thread captura de mensagens acessar */
+/* instancia a lista de forma global */
 
 HANDLE mapped_memory = CreateFileMapping(
                                           (HANDLE)0xFFFFFFFF,
                                           NULL,
                                           PAGE_READWRITE,
                                           0,
-                                          sizeof(int)*buffer_2_size,
+                                          sizeof(int)*buffer_2_size,   // quando a lista segurar mensagens esse campo deve ser reajustado
                                           "lista_2");
+
+
+/* CheckForError(mapped_memory); */
+
+int * second_buffer_local = (int*)MapViewOfFile(
+                                        mapped_memory,
+                                        FILE_MAP_WRITE,
+                                        0,
+                                        0,
+                                        sizeof(int) * buffer_2_size);
+
+/* CheckForError(second_buffer_local); */
 
 /* cria variaveis de processo */
 
@@ -139,7 +151,6 @@ int main()
     end_event = CreateEvent(NULL, TRUE, FALSE, TEXT("end_event")); 
 
     /* cria segunda lista compartilhada em memoria */
-
 
     /* cria threads */
 
@@ -512,16 +523,8 @@ DWORD WINAPI captura_mensagens(LPVOID id)
     HANDLE buffer_block_objects[2] = { sem_ocupado, end_event };
     DWORD ret;
     int event_id = 0;
-    int * lista_2_local; 
 
-    lista_2_local = (int*)MapViewOfFile(
-                                        mapped_memory,
-                                        FILE_MAP_WRITE,
-                                        0,
-                                        0,
-                                        sizeof(int) * buffer_2_size);
-
-    CheckForError(lista_2_local);
+    int second_list_index = 0;
 
     do {
 
@@ -541,12 +544,12 @@ DWORD WINAPI captura_mensagens(LPVOID id)
         int index = p_ocupado % buffer_size;
         int data = buffer[index];
 
-        int second_list_index = 0;
 
         if(data % 2 == 0){
             printf("\nThread capturadora de mensagens leu informação %i em buffer[%i]\n", data, index);
         }else{
-            lista_2_local[second_list_index] = data;
+            printf("\nThread capturadora de mensagens escreveu informação %i em buffer em memoria[%i]\n", data, second_list_index);
+            second_buffer_local[second_list_index] = data;
             second_list_index++;
         };
 
