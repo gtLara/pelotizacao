@@ -82,6 +82,43 @@ int * second_buffer_local = (int*)MapViewOfFile(
 
 /* CheckForError(second_buffer_local); */
 
+/* cria apontadores para posicoes livres e ocupadas */
+
+HANDLE mapped_memory_p_ocupado = CreateFileMapping(
+                                          (HANDLE)0xFFFFFFFF,
+                                          NULL,
+                                          PAGE_READWRITE,
+                                          0,
+                                          sizeof(int),
+                                          "p_ocupado");
+
+int second_p_ocupado_offset = sizeof(int) * buffer_2_size + 100;
+
+int second_p_ocupado = (int)MapViewOfFile(
+                                            mapped_memory_p_ocupado,
+                                            FILE_MAP_WRITE,
+                                            0,
+                                            second_p_ocupado_offset, // desclocamento para nao sobrepor a segunda lista
+                                            sizeof(int));
+
+HANDLE mapped_memory_p_livre = CreateFileMapping(
+                                          (HANDLE)0xFFFFFFFF,
+                                          NULL,
+                                          PAGE_READWRITE,
+                                          0,
+                                          sizeof(int),
+                                          "p_livre");
+
+int second_p_livre_offset = sizeof(int) * buffer_2_size + 200;
+
+int second_p_livre = (int)MapViewOfFile(
+                                            mapped_memory_p_livre,
+                                            FILE_MAP_WRITE,
+                                            0,
+                                            second_p_livre_offset, // desclocamento para nao sobrepor a segunda lista nem p_ocupado
+                                            sizeof(int));
+
+
 /* cria variaveis de processo */
 
 int buffer[buffer_size];
@@ -551,9 +588,9 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 
         p_ocupado++;
 
-        ReleaseSemaphore(sem_livre, 1, NULL);
-
         ReleaseSemaphore(sem_rw, 1, NULL);
+
+        ReleaseSemaphore(sem_livre, 1, NULL);
 
         /* decisao : fazer tratamento de dados depois de leitura para nao aninhar semaforos */
 
