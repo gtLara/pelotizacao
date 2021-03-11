@@ -36,12 +36,17 @@ HANDLE analise_granulometria_toggle_event;
 HANDLE exibe_dados_mailslot_event;
 DWORD sent_bytes;
 
-
 /* cria handles para semaforos para sincronizacao da lista circular 1 */
 
 HANDLE sem_livre;
 HANDLE sem_ocupado;
 HANDLE sem_rw;
+
+/* cria handles para semaforos para sincronizacao da lista circular 2 */
+
+HANDLE second_sem_livre;
+HANDLE second_sem_ocupado;
+HANDLE second_sem_rw;
 
 /* cria variaveis necessarias para sincronizacao */
 
@@ -50,6 +55,8 @@ const int buffer_2_size = 100;
 int p_livre = 0;
 int p_ocupado = 0;
 int timeout = 100;
+
+/* cria variaveis mapeadas em memoria para sincronizacao da lista 2 */
 
 /* cria segunda lista mapeada em memoria */
 
@@ -120,6 +127,17 @@ int main()
     sem_ocupado = CreateSemaphore(NULL, 0, buffer_size, NULL);
 
     sem_rw = CreateSemaphore(NULL, 1, 1, NULL);
+
+    /* Cria semáforos para sincronização de escrita e leitura da segund lista circular em memória
+     * observe que todos sao nomeados para compartilhamento interprocessos */
+
+    second_sem_livre = CreateSemaphore(NULL, buffer_2_size, buffer_2_size, TEXT("sem_livre"));
+
+    second_sem_ocupado = CreateSemaphore(NULL, 0, buffer_2_size, TEXT("sem_ocupado"));
+
+    second_sem_rw = CreateSemaphore(NULL, 1, 1, TEXT("sem_rw"));
+
+
 
     /* declara threads */
 
