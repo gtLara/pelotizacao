@@ -15,8 +15,18 @@ int main() {
     int event_id = -1;
     int buffer_2_size = 3;
     DWORD ret;
+
+    /* abre eventos para pausa e finalizacao */
+
     HANDLE end_event = OpenEvent(EVENT_ALL_ACCESS, TRUE, TEXT("end_event"));
     HANDLE toggle_event = OpenEvent(EVENT_ALL_ACCESS, TRUE, TEXT("analise_granulometria_toggle_event"));
+
+    /* abre semaforos para sincronizacao da lista 2 */
+
+    HANDLE sem_livre = OpenSemaphore(SEMAPHORE_ALL_ACCESS, TRUE, TEXT("sem_livre"));
+    HANDLE sem_ocupado = OpenSemaphore(SEMAPHORE_ALL_ACCESS, TRUE, TEXT("sem_ocupado"));
+    HANDLE sem_rw = OpenSemaphore(SEMAPHORE_ALL_ACCESS, TRUE, TEXT("sem_rw"));
+
 
     HANDLE mapped_memory = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, "lista_2"); // abre segunda lista em memoria
     /* CheckForError(mapped_memory); */
@@ -39,23 +49,28 @@ int main() {
 
     do {
 
-        printf("\n Entrando em loop \n");
+        /* printf("\n Entrando em loop \n"); */
 
-        /* Sleep(5000); */
+        Sleep(3000);
+
+        WaitForSingleObject(sem_ocupado, INFINITE);
+        WaitForSingleObject(sem_rw, INFINITE);
+
+        printf("\n Carregando dado de posicao %i de buffer em memoria \n", dummy_counter);
+        
+        recovered_data = second_buffer_local[dummy_counter];
+        dummy_counter++;
+
+        printf("\nDado recuperado: %i\n", recovered_data);
+
+        ReleaseSemaphore(sem_rw, 1, NULL);
+        ReleaseSemaphore(sem_livre, 1, NULL);
 
         ret = WaitForMultipleObjects(2, events, FALSE, 100);
-
-        /* printf("\n Carregando dado de posicao %i de buffer em memoria \n", dummy_counter); */
-        
-        /* recovered_data = second_buffer_local[dummy_counter]; */
-        /* dummy_counter++; */
-
-        /* printf("\nDado recuperado: %i\n", recovered_data); */
 
         if (ret == WAIT_TIMEOUT) {  // o codigo desse ponto para frente so eh executado se houver sinalizacao de bloqueio ou termino
             continue;
         }
-
 
         event_id = ret - WAIT_OBJECT_0;
 
