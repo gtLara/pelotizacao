@@ -13,7 +13,7 @@ int main() {
     setlocale(LC_ALL, "Portuguese");
 
     int event_id = -1;
-    int buffer_2_size = 100;
+    int buffer_2_size = 3;
     DWORD ret;
     HANDLE end_event = OpenEvent(EVENT_ALL_ACCESS, TRUE, TEXT("end_event"));
     HANDLE toggle_event = OpenEvent(EVENT_ALL_ACCESS, TRUE, TEXT("analise_granulometria_toggle_event"));
@@ -41,18 +41,16 @@ int main() {
 
         printf("\n Entrando em loop \n");
 
-        Sleep(5000);
+        /* Sleep(5000); */
 
-        printf("\n Passando de sleep \n");
-        
         ret = WaitForMultipleObjects(2, events, FALSE, 100);
 
-        printf("\n Carregando dado de posicao %i de buffer em memoria \n", dummy_counter);
+        /* printf("\n Carregando dado de posicao %i de buffer em memoria \n", dummy_counter); */
         
-        recovered_data = second_buffer_local[dummy_counter];
-        dummy_counter++;
+        /* recovered_data = second_buffer_local[dummy_counter]; */
+        /* dummy_counter++; */
 
-        printf("\nDado recuperado: %i\n", recovered_data);
+        /* printf("\nDado recuperado: %i\n", recovered_data); */
 
         if (ret == WAIT_TIMEOUT) {  // o codigo desse ponto para frente so eh executado se houver sinalizacao de bloqueio ou termino
             continue;

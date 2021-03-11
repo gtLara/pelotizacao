@@ -51,7 +51,7 @@ HANDLE second_sem_rw;
 /* cria variaveis necessarias para sincronizacao */
 
 const int buffer_size = 200;
-const int buffer_2_size = 100;
+const int buffer_2_size = 3;
 int p_livre = 0;
 int p_ocupado = 0;
 int timeout = 100;
@@ -136,8 +136,6 @@ int main()
     second_sem_ocupado = CreateSemaphore(NULL, 0, buffer_2_size, TEXT("sem_ocupado"));
 
     second_sem_rw = CreateSemaphore(NULL, 1, 1, TEXT("sem_rw"));
-
-
 
     /* declara threads */
 
@@ -343,21 +341,6 @@ DWORD WINAPI leitura_medicao(LPVOID id)
 
     do {
 
-        /* verifica se ha posicoes livres em buffer*/
-
-        /* TODO: preencher valor de timeout. se nao ha no momento da verificacao, a thread aguarda por timeout milisegundos
-         e se bloqueia por que o buffer estava cheio */
-        
-        /* if(previous_ocuppied_count == 9){ */
-
-        /*     printf("\nThread leitora de medicao tentou depositar informacao mas buffer estava cheio. Se bloqueando ate livrar espaco\n"); */
-
-        /*     ret = WaitForMultipleObjects(2, buffer_block_objects, FALSE, INFINITE); */
-
-        /*     if (ret == 1) { break; } */
-
-        /* } */
-        
         ret = WaitForSingleObject(sem_livre, timeout);
 
         if (ret == WAIT_TIMEOUT) {
@@ -539,6 +522,7 @@ DWORD WINAPI captura_mensagens(LPVOID id)
     
     HANDLE Events[2] = { captura_mensagens_toggle_event, end_event };
     HANDLE buffer_block_objects[2] = { sem_ocupado, end_event };
+    HANDLE second_buffer_block_objects[2] = { second_sem_livre, end_event };
     DWORD ret;
     int event_id = 0;
 
@@ -548,6 +532,8 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 
         /* lógica padrão da thread */
 
+        /* acesso a primeira lista circular */ 
+
         ret = WaitForSingleObject(sem_ocupado, timeout);
 
         if(ret == WAIT_TIMEOUT){
@@ -556,26 +542,52 @@ DWORD WINAPI captura_mensagens(LPVOID id)
             if (ret == 1) { break; }
         }
 
-        /* espera mutex para acessar buffer */
+        /* espera mutex para acessar primeiro buffer em memoria */
         WaitForSingleObject(sem_rw, INFINITE);
 
         int index = p_ocupado % buffer_size;
+        /* consome dado de lista 1 */
         int data = buffer[index];
-
-
-        if(data % 2 == 0){
-            printf("\nThread capturadora de mensagens leu informação %i em buffer[%i]\n", data, index);
-        }else{
-            printf("\nThread capturadora de mensagens escreveu informação %i em buffer em memoria[%i]\n", data, second_list_index);
-            second_buffer_local[second_list_index] = data;
-            second_list_index++;
-        };
 
         p_ocupado++;
 
         ReleaseSemaphore(sem_rw, 1, NULL);
 
         ReleaseSemaphore(sem_livre, 1, NULL);
+
+        /* decisao : fazer tratamento de dados depois de leitura para nao aninhar semaforos */
+
+        /* analisa dado consumido */
+
+        if(data % 2 == 0){
+            printf("\nThread capturadora de mensagens leu informação %i em buffer[%i]\n", data, index);
+        }else{ 
+            /* caso em que dados sao escritos na segunda lista. requer sincronizacao */
+
+            /* espera por posicoes livres na lista */
+
+            ret = WaitForSingleObject(second_sem_livre, timeout);
+
+            if (ret == WAIT_TIMEOUT) {
+                printf("\n************************************************************************************************************"
+                    "\nCapacidade máxima da primeira lista circular em memória atingida."
+                    "\nThread de leitura de dados do processo tentou depositar informação e está se bloqueando até livrar posição."
+                    "\n************************************************************************************************************\n");
+                ret = WaitForMultipleObjects(2, second_buffer_block_objects, FALSE, INFINITE);
+                ret = ret - WAIT_OBJECT_0;
+                if (ret == 1) { break; }
+
+            }
+
+            WaitForSingleObject(second_sem_rw, INFINITE);
+
+            printf("\nThread capturadora de mensagens escreveu informação %i em buffer em memoria[%i]\n", data, second_list_index);
+            second_buffer_local[second_list_index] = data;
+            second_list_index++;
+
+            ReleaseSemaphore(second_sem_rw, 1, NULL);
+            ReleaseSemaphore(second_sem_ocupado, 1, NULL);
+        };
 
         /* espera por 1 s por objeto de toggle ou finalizador */
 
