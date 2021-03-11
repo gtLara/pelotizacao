@@ -408,7 +408,7 @@ DWORD WINAPI leitura_medicao(LPVOID id)
         buffer[index] = medicao_counter;
         p_livre++;
 
-        printf("\nThread leitora de medição de granulometria depositou informação %i em buffer[%i]\n", medicao_counter, index);
+        /* printf("\nThread leitora de medição de granulometria depositou informação %i em buffer[%i]\n", medicao_counter, index); */
 
         medicao_counter += 2;
 
@@ -509,7 +509,7 @@ DWORD WINAPI leitura_dados(LPVOID id)
         buffer[index] = data_counter;
         p_livre++;
 
-        printf("\nThread leitora de dados de processo depositou informação %i em buffer[%i]\n", data_counter, index);
+        /* printf("\nThread leitora de dados de processo depositou informação %i em buffer[%i]\n", data_counter, index); */
         data_counter += 2;
 
         ReleaseSemaphore(sem_rw, 1, NULL);
@@ -563,7 +563,8 @@ DWORD WINAPI captura_mensagens(LPVOID id)
     DWORD ret;
     int event_id = 0;
 
-    int second_list_index = 0;
+    int index;
+    int second_index;
 
     do {
 
@@ -582,7 +583,7 @@ DWORD WINAPI captura_mensagens(LPVOID id)
         /* espera mutex para acessar primeiro buffer em memoria */
         WaitForSingleObject(sem_rw, INFINITE);
 
-        int index = p_ocupado % buffer_size;
+        index = p_ocupado % buffer_size;
         /* consome dado de lista 1 */
         int data = buffer[index];
 
@@ -597,7 +598,7 @@ DWORD WINAPI captura_mensagens(LPVOID id)
         /* analisa dado consumido */
 
         if(data % 2 == 0){
-            printf("\nThread capturadora de mensagens leu informação %i em buffer[%i]\n", data, index);
+            /* printf("\nThread capturadora de mensagens leu informação %i em buffer[%i]\n", data, index); */
         }else{ 
             /* caso em que dados sao escritos na segunda lista. requer sincronizacao */
 
@@ -618,11 +619,11 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 
             WaitForSingleObject(second_sem_rw, INFINITE);
 
-            second_list_index = second_list_index % buffer_2_size;
+            second_index = second_p_livre % buffer_2_size;
 
-            second_buffer_local[second_list_index] = data;
-            printf("\nThread capturadora de mensagens escreveu informação %i em buffer em memoria[%i]\n", data, second_list_index);
-            second_list_index++;
+            second_buffer_local[second_index] = data;
+            printf("\nThread capturadora de mensagens escreveu informação %i em buffer em memoria[%i]\n", data, second_index);
+            second_p_livre++;
 
             ReleaseSemaphore(second_sem_rw, 1, NULL);
             ReleaseSemaphore(second_sem_ocupado, 1, NULL);

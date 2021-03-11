@@ -66,25 +66,23 @@ int main() {
 
     HANDLE events[2] = { toggle_event, end_event };
 
-    int dummy_counter = 0;
+    int data_index;
     int recovered_data;
 
     do {
 
-        /* printf("\n Entrando em loop \n"); */
+        printf("\n Entrando em loop \n");
 
-        Sleep(3000);
+        Sleep(1000);
 
         WaitForSingleObject(sem_ocupado, INFINITE);
         WaitForSingleObject(sem_rw, INFINITE);
-
-        dummy_counter = dummy_counter % buffer_2_size;
         
-        recovered_data = second_buffer_local[dummy_counter];
-        printf("\n Carregando dado de posicao %i de buffer em memoria \n", dummy_counter);
-        dummy_counter++;
-
-        printf("\nDado recuperado: %i\n", recovered_data);
+        data_index = p_ocupado % buffer_2_size;
+        
+        recovered_data = second_buffer_local[data_index];
+        printf("\n Carregando dado %i de buffer[%i]\n", recovered_data, data_index);
+        p_ocupado++;
 
         ReleaseSemaphore(sem_rw, 1, NULL);
         ReleaseSemaphore(sem_livre, 1, NULL);
