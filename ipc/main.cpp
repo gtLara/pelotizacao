@@ -51,7 +51,7 @@ HANDLE second_sem_rw;
 /* cria variaveis necessarias para sincronizacao */
 
 const int buffer_size = 200;
-const int buffer_2_size = 3;
+const int buffer_2_size = 5;
 int p_livre = 0;
 int p_ocupado = 0;
 int timeout = 100;
@@ -551,9 +551,9 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 
         p_ocupado++;
 
-        ReleaseSemaphore(sem_rw, 1, NULL);
-
         ReleaseSemaphore(sem_livre, 1, NULL);
+
+        ReleaseSemaphore(sem_rw, 1, NULL);
 
         /* decisao : fazer tratamento de dados depois de leitura para nao aninhar semaforos */
 
@@ -570,8 +570,8 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 
             if (ret == WAIT_TIMEOUT) {
                 printf("\n************************************************************************************************************"
-                    "\nCapacidade máxima da primeira lista circular em memória atingida."
-                    "\nThread de leitura de dados do processo tentou depositar informação e está se bloqueando até livrar posição."
+                    "\nCapacidade máxima da segunda lista circular em memória atingida."
+                    "\nThread de captura de dados tentou depositar informação e está se bloqueando até livrar posição."
                     "\n************************************************************************************************************\n");
                 ret = WaitForMultipleObjects(2, second_buffer_block_objects, FALSE, INFINITE);
                 ret = ret - WAIT_OBJECT_0;
@@ -581,8 +581,10 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 
             WaitForSingleObject(second_sem_rw, INFINITE);
 
-            printf("\nThread capturadora de mensagens escreveu informação %i em buffer em memoria[%i]\n", data, second_list_index);
+            second_list_index = second_list_index % buffer_2_size;
+
             second_buffer_local[second_list_index] = data;
+            printf("\nThread capturadora de mensagens escreveu informação %i em buffer em memoria[%i]\n", data, second_list_index);
             second_list_index++;
 
             ReleaseSemaphore(second_sem_rw, 1, NULL);

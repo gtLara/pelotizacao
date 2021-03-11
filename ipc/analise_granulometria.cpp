@@ -13,7 +13,7 @@ int main() {
     setlocale(LC_ALL, "Portuguese");
 
     int event_id = -1;
-    int buffer_2_size = 3;
+    int buffer_2_size = 5;
     DWORD ret;
 
     /* abre eventos para pausa e finalizacao */
@@ -56,9 +56,10 @@ int main() {
         WaitForSingleObject(sem_ocupado, INFINITE);
         WaitForSingleObject(sem_rw, INFINITE);
 
-        printf("\n Carregando dado de posicao %i de buffer em memoria \n", dummy_counter);
+        dummy_counter = dummy_counter % buffer_2_size;
         
         recovered_data = second_buffer_local[dummy_counter];
+        printf("\n Carregando dado de posicao %i de buffer em memoria \n", dummy_counter);
         dummy_counter++;
 
         printf("\nDado recuperado: %i\n", recovered_data);
