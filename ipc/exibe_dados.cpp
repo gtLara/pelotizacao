@@ -84,8 +84,6 @@ int main() {
 
     do {
 
-        Sleep(1000);
-
     	int signal = 0;
 
     	bool status = ReadFile(mailslot, &signal, sizeof(int), NULL, NULL);
@@ -121,5 +119,3 @@ int main() {
     } while (event_id != 1);
 
 };
-
-

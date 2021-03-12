@@ -408,7 +408,7 @@ DWORD WINAPI leitura_medicao(LPVOID id)
         buffer[index] = medicao_counter;
         p_livre++;
 
-        /* printf("\nThread leitora de medição de granulometria depositou informação %i em buffer[%i]\n", medicao_counter, index); */
+        printf("\nThread leitora de medição de granulometria depositou informação %i em buffer[%i]\n", medicao_counter, index);
 
         medicao_counter += 2;
 
@@ -418,13 +418,11 @@ DWORD WINAPI leitura_medicao(LPVOID id)
 
         ReleaseSemaphore(sem_ocupado, 1, &previous_ocuppied_count);
 
-        /* TODO:adiciona valor de timout espera por .1 s por objeto de toggle ou finalizador
-         como os sinais de toggle e finalizacao sao acionados pela funcao SetEvent, sempre que o sinal for
-         dado esta thread vai na proxima execucao (ou no intervalo de timeout) detecta-lo e manifestar o comportamento
-         desejado. a funcao na realidade mais confere do que espera, como mencionado no comentario anterior */
+        /* TODO: decidir se tempo ser arrendondado para segundos ou nao */
 
-        Sleep(1000);
-        ret = WaitForMultipleObjects(2, Events, FALSE, timeout);
+
+        int rand_timeout = rand() % 5;
+        ret = WaitForMultipleObjects(2, Events, FALSE, rand_timeout*1000);
 
         /* caso espere o tempo limite, prosseguir com lógica */
 
@@ -476,19 +474,6 @@ DWORD WINAPI leitura_dados(LPVOID id)
 
     do {
 
-        /* char* time = show_time(); essa linha estava quebrando o codigo! investigar depois.*/
-
-        /* espera ter posicoes livres */
-
-        /* if(previous_ocuppied_count == 9){ */
-        /*     printf("\nThread leitora de dados tentou depositar informacao mas buffer estava cheio. Se bloqueando ate livrar espaco\n"); */
-
-        /*     ret = WaitForMultipleObjects(2, buffer_block_objects, FALSE, INFINITE); */
-
-        /*     if (ret == 1) { break; } */
-
-        /* } */
-
         ret = WaitForSingleObject(sem_livre, timeout);
 
         if (ret == WAIT_TIMEOUT) {
@@ -509,7 +494,7 @@ DWORD WINAPI leitura_dados(LPVOID id)
         buffer[index] = data_counter;
         p_livre++;
 
-        /* printf("\nThread leitora de dados de processo depositou informação %i em buffer[%i]\n", data_counter, index); */
+        printf("\nThread leitora de dados de processo depositou informação %i em buffer[%i]\n", data_counter, index);
         data_counter += 2;
 
         ReleaseSemaphore(sem_rw, 1, NULL);
@@ -517,8 +502,8 @@ DWORD WINAPI leitura_dados(LPVOID id)
         ReleaseSemaphore(sem_ocupado, 1, &previous_ocuppied_count);
         /* espera por 1 s por objeto de toggle ou finalizador */
 
-        Sleep(1000);
-        ret = WaitForMultipleObjects(2, Events, FALSE, timeout);
+        int local_timeout = 500;
+        ret = WaitForMultipleObjects(2, Events, FALSE, local_timeout);
 
         /* caso espere o tempo limite, prosseguir com lógica */
 
@@ -598,7 +583,7 @@ DWORD WINAPI captura_mensagens(LPVOID id)
         /* analisa dado consumido */
 
         if(data % 2 == 0){
-            /* printf("\nThread capturadora de mensagens leu informação %i em buffer[%i]\n", data, index); */
+            printf("\nThread capturadora de mensagens leu informação %i em buffer[%i]\n", data, index);
         }else{ 
             /* caso em que dados sao escritos na segunda lista. requer sincronizacao */
 

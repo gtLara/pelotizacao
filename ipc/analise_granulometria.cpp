@@ -72,10 +72,6 @@ int main() {
 
     do {
 
-        printf("\n Entrando em loop \n");
-
-        Sleep(1000);
-
         ret = WaitForSingleObject(sem_ocupado, 100);
         if(ret == WAIT_TIMEOUT){
             ret = WaitForMultipleObjects(2, occupied_sem_events, FALSE, INFINITE);
