@@ -65,6 +65,7 @@ int main() {
     printf("\nProcesso analise de granulometria disparado\n");
 
     HANDLE events[2] = { toggle_event, end_event };
+    HANDLE occupied_sem_events[2] = { sem_ocupado, end_event };
 
     int data_index;
     int recovered_data;
@@ -75,7 +76,14 @@ int main() {
 
         Sleep(1000);
 
-        WaitForSingleObject(sem_ocupado, INFINITE);
+        ret = WaitForSingleObject(sem_ocupado, 100);
+        if(ret == WAIT_TIMEOUT){
+            ret = WaitForMultipleObjects(2, occupied_sem_events, FALSE, INFINITE);
+            ret = ret - WAIT_OBJECT_0;
+            if (ret == 1) { break; }
+        }
+
+
         WaitForSingleObject(sem_rw, INFINITE);
         
         data_index = p_ocupado % buffer_2_size;
