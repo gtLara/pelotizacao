@@ -11,31 +11,50 @@ SYSTEMTIME time;
 int main(){
 
     int nseq = -1;
-    int id_disco;
+    int id_disco_gran;
+    int id_disco_plc;
     double gr_med;
     double gr_max;
     double gr_min;
     double sigma;
+    double vz_entrada;
+    double vz_saida;
+    double velocidade;
+    double potencia;
+    double inclinacao;
     Timestamp timestamp;
 
     do{
 
     Sleep(500);
-    id_disco = (rand() % 2)+1;
+
+    id_disco_gran = (rand() % 2)+1;
     gr_med = (rand() % 10000) ;
     gr_max = (rand() % 10000) ;
     gr_min = (rand() % 10000) ;
     sigma = (rand() % 10000) ;
+
+    id_disco_plc = (rand() % 6)+1;
+    vz_entrada = (rand() % 10000) ;
+    vz_saida = (rand() % 10000) ;
+    velocidade = (rand() % 10000) ;
+    inclinacao = (rand() % 450) ;
+    potencia = (rand() % 2000) ;
+
 
     GetLocalTime(&time);
     
     timestamp.hour = time.wHour;
     timestamp.minute = time.wMinute;
     timestamp.second = time.wSecond;
+    timestamp.millisecond = time.wMilliseconds;
 
     nseq = ( nseq + 1 ) % 10;
-    Message message = create_message(nseq, id_disco, gr_med/100, gr_max/100, gr_min/100, sigma, timestamp, 0);
-    show_message(message);
+    MessageGranulometria messagegran = create_message(nseq, id_disco_gran, gr_med/100, gr_max/100, gr_min/100, sigma, timestamp, 0);
+    /* show_message(messagegran); */
+
+    MessagePLC messageplc = create_message(nseq, id_disco_plc, vz_entrada/10, vz_saida/10, velocidade/10, inclinacao/10, potencia/1000, timestamp, 99);
+    show_message(messageplc);
 
     }while(true);
 }
