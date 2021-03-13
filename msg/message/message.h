@@ -12,16 +12,16 @@ typedef struct{
     int tipo;
     int nseq;
     int id_disco;
-    float gr_medio; 
-    float gr_max; 
-    float gr_min; 
-    float sigma; 
+    double gr_medio; 
+    double gr_max; 
+    double gr_min; 
+    double sigma; 
     Timestamp time;
 
 } Message;
 
-Message create_message(int nseq, int id_disco, float gr_medio, float gr_max,
-                       float gr_min, float sigma, Timestamp time, int tipo);
+Message create_message(int nseq, int id_disco, double gr_medio, double gr_max,
+                       double gr_min, double sigma, Timestamp time, int tipo);
 
 void show_message(Message msg);
 

@@ -1,8 +1,8 @@
 #include "message.h"
 #include <stdio.h>
 
-Message create_message(int nseq, int id_disco, float gr_medio, float gr_max,
-                       float gr_min, float sigma, Timestamp time, int tipo=0){
+Message create_message(int nseq, int id_disco, double gr_medio, double gr_max,
+                       double gr_min, double sigma, Timestamp time, int tipo=0){
 
     Message message;
     message.tipo = tipo;

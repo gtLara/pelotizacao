@@ -10,20 +10,22 @@ SYSTEMTIME time;
 
 int main(){
 
-/* TODO: ver como acertar aleatoridade nas casas decimais */
-    
-
     int nseq = -1;
+    int id_disco;
+    double gr_med;
+    double gr_max;
+    double gr_min;
+    double sigma;
+    Timestamp timestamp;
 
     do{
 
     Sleep(500);
-    int id_disco = (rand() % 2)+1;
-    float gr_med = (rand() % 10000) ;
-    float gr_max = (rand() % 10000) ;
-    float gr_min = (rand() % 10000) ;
-    float sigma = (rand() % 10000) ;
-    Timestamp timestamp;
+    id_disco = (rand() % 2)+1;
+    gr_med = (rand() % 10000) ;
+    gr_max = (rand() % 10000) ;
+    gr_min = (rand() % 10000) ;
+    sigma = (rand() % 10000) ;
 
     GetLocalTime(&time);
     
@@ -31,8 +33,8 @@ int main(){
     timestamp.minute = time.wMinute;
     timestamp.second = time.wSecond;
 
-    nseq = ( nseq + 1 ) % 9999;
-    Message message = create_message(nseq, id_disco, gr_med, gr_max, gr_min, sigma, timestamp, 0);
+    nseq = ( nseq + 1 ) % 10;
+    Message message = create_message(nseq, id_disco, gr_med/100, gr_max/100, gr_min/100, sigma, timestamp, 0);
     show_message(message);
 
     }while(true);
