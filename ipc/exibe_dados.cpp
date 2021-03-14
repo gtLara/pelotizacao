@@ -3,11 +3,20 @@
 #include<stdlib.h>
 #include<process.h>
 #include<locale.h>
+#include "message.h"
 
 #define _CHECKERROR     1
 #include "CheckForError.h"
 
 /* funcao que limpa saida de console */
+
+/* void show_message(MessagePLC msg){ */
+
+/*     printf("%i:%i:%i NSEQ: %i   ID: %i  VZ E: %.1f  VZ S: %.1f  V: %.1f  ANG: %.1f  P: %.1f\n", */
+/*         msg.time.hour, msg.time.minute, msg.time.second, */
+/*         msg.nseq, msg.id_disco,  msg.vz_entrada, msg.vz_saida, */
+/*         msg.velocidade, msg.inclinacao, msg.potencia); */
+/* } */
 
 void clear_screen(){
 
@@ -87,7 +96,7 @@ int main() {
 
     printf("\nProcesso de exibe dados de processo disparado\n");
 
-    int message;
+    Message message;
     int signal;
 
     do {
@@ -102,11 +111,15 @@ int main() {
 
         /* Verifica se recebeu mensagem */
 
-        message = 0;         
+        /* printf("\n Passando de recebimento de sinal de limpa \n"); */
 
-        status = ReadFile(mailslot_mensagem, &message, sizeof(int), NULL, NULL);
+        message.type = -1;         
 
-        if(message) printf("\nMensagem recebida: %i\n", message);
+        status = ReadFile(mailslot_mensagem, &message, sizeof(Message), NULL, NULL);
+
+        /* printf("\n Passando de recebimento de sinal de limpa \n"); */
+
+        if(message.type != -1) show_message(message.plc);
 
         ret = WaitForMultipleObjects(2, events, FALSE, 100);
 

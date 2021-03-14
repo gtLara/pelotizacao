@@ -506,6 +506,7 @@ DWORD WINAPI leitura_dados(LPVOID id)
 
         Message message;
         message.plc = generate_message_plc(message_counter);
+        message.type = 99;
 
         /* deposito de mensagem em lista */
 
@@ -607,9 +608,10 @@ DWORD WINAPI captura_mensagens(LPVOID id)
         index = p_ocupado % buffer_size;
         /* consome dado de lista 1 */
         /* int data = buffer[index]; */
-        int data = 0;
+        Message message;
+        message = buffer[index];
 
-        printf("\nConsumindo dado buffer[%i] = %i\n", index, data);
+        /* printf("\nConsumindo dado buffer[%i] = %i\n", index, data); */
 
         p_ocupado++;
 
@@ -621,12 +623,13 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 
         /* analisa dado consumido */
 
-        if(data % 2 == 0){
-            printf("\nEnviand dado %i para tarefa de exibe dados\n", data);
-            WriteFile(message_mailslot, &data, sizeof(int), NULL, NULL);
+        if(message.type == 99){
+            /* printf("\nEnviand dado %i para tarefa de exibe dados\n", data); */
+            printf("\nEnviand dado para tarefa de exibe dados\n");
+            WriteFile(message_mailslot, &message, sizeof(Message), NULL, NULL);
         }else{ 
             /* caso em que dados sao escritos na segunda lista. requer sincronizacao */
-            printf("\nEnviando dado %i para segunda lista circular\n", data);
+            /* printf("\nEnviando dado %i para segunda lista circular\n", data); */
 
             /* espera por posicoes livres na lista */
 
@@ -647,8 +650,8 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 
             second_index = second_p_livre % buffer_2_size;
 
-            second_buffer_local[second_index] = data;
-            printf("\nThread capturadora de mensagens escreveu informação %i em buffer em memoria[%i]\n", data, second_index);
+            second_buffer_local[second_index] = 0;
+            /* printf("\nThread capturadora de mensagens escreveu informação %i em buffer em memoria[%i]\n", data, second_index); */
             second_p_livre++;
 
             ReleaseSemaphore(second_sem_rw, 1, NULL);

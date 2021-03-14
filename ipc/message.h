@@ -57,6 +57,7 @@ void show_message(MessagePLC msg);
 typedef struct{
     MessagePLC plc;
     MessageGranulometria granulometria;
+    int type;
 } Message;
 
 #endif // MESSAGE_H_
