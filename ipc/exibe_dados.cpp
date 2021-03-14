@@ -11,12 +11,12 @@
 
 void clear_screen(){
 
-  DWORD                      count;
-  DWORD                      cell_count;
+  DWORD count;
+  DWORD cell_count;
 
-  COORD                      home_coords = { 0, 0 };
+  COORD home_coords = { 0, 0 };
 
-  HANDLE                     std_out;
+  HANDLE std_out;
   CONSOLE_SCREEN_BUFFER_INFO csbi;
 
   std_out = GetStdHandle( STD_OUTPUT_HANDLE );
@@ -97,8 +97,6 @@ int main() {
         signal = 0;
 
     	bool status = ReadFile(mailslot, &signal, sizeof(int), NULL, NULL);
-
-    	/* printf("\nSinal recebido:%i\n", signal); */
 
     	if(signal) clear_screen();
 

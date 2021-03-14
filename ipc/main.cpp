@@ -51,7 +51,7 @@ HANDLE second_sem_rw;
 /* cria variaveis necessarias para sincronizacao */
 
 const int buffer_size = 200;
-const int buffer_2_size = 5;
+const int buffer_2_size = 100;
 int p_livre = 0;
 int p_ocupado = 0;
 int timeout = 100;
@@ -593,6 +593,8 @@ DWORD WINAPI captura_mensagens(LPVOID id)
         /* consome dado de lista 1 */
         int data = buffer[index];
 
+        printf("\nConsumindo dado buffer[%i] = %i\n", index, data);
+
         p_ocupado++;
 
         ReleaseSemaphore(sem_rw, 1, NULL);
@@ -604,14 +606,15 @@ DWORD WINAPI captura_mensagens(LPVOID id)
         /* analisa dado consumido */
 
         if(data % 2 == 0){
-            /* envia mensagem aqui */
+            printf("\nEnviand dado %i para tarefa de exibe dados\n", data);
             WriteFile(message_mailslot, &data, sizeof(int), NULL, NULL);
         }else{ 
             /* caso em que dados sao escritos na segunda lista. requer sincronizacao */
+            printf("\nEnviando dado %i para segunda lista circular\n", data);
 
             /* espera por posicoes livres na lista */
 
-            ret = WaitForSingleObject(second_sem_livre, timeout);
+            ret = WaitForSingleObject(second_sem_livre, 100);
 
             if (ret == WAIT_TIMEOUT) {
                 printf("\n************************************************************************************************************"
