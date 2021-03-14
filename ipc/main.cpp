@@ -5,6 +5,8 @@
 #include <conio.h>		// _getch
 #include <locale.h>
 
+#include "message.h"
+
 #define _CHECKERROR	1
 #include "CheckForError.h"
 
@@ -121,7 +123,7 @@ int second_p_livre = (int)MapViewOfFile(
 
 /* cria variaveis de processo */
 
-int buffer[buffer_size];
+Message buffer[buffer_size];
 int medicao_counter = 1;
 int data_counter = 0;
 
@@ -378,6 +380,7 @@ DWORD WINAPI leitura_medicao(LPVOID id)
     LONG previous_ocuppied_count = 0;
     DWORD ret;
     int event_id = 0;
+    int message_counter;
 
     do {
 
@@ -406,14 +409,18 @@ DWORD WINAPI leitura_medicao(LPVOID id)
 
         int index = p_livre % buffer_size;
 
+        /* cria mensagem */
+
+        Message message;
+        message.granulometria = generate_message_gran(message_counter);
+
         /* deposita informação e incrementa apontador para posição livre na lista circular */
 
-        buffer[index] = medicao_counter;
+        buffer[index] = message;
         p_livre++;
 
-        printf("\nThread leitora de medição de granulometria depositou informação %i em buffer[%i]\n", medicao_counter, index);
-
-        medicao_counter += 2;
+        printf("\nThread leitora de medição de granulometria depositou a seguinte mensagem na posicao %i da lista 1:\n", index);
+        show_message(message.granulometria);
 
         /* libera semáforo binário de acesso ao buffer */
 
@@ -422,7 +429,6 @@ DWORD WINAPI leitura_medicao(LPVOID id)
         ReleaseSemaphore(sem_ocupado, 1, &previous_ocuppied_count);
 
         /* TODO: decidir se tempo ser arrendondado para segundos ou nao */
-
 
         int rand_timeout = rand() % 5;
         ret = WaitForMultipleObjects(2, Events, FALSE, rand_timeout*1000);
@@ -474,6 +480,7 @@ DWORD WINAPI leitura_dados(LPVOID id)
     DWORD ret;
 
     int event_id = 0;
+    int message_counter;
 
     do {
 
@@ -494,11 +501,19 @@ DWORD WINAPI leitura_dados(LPVOID id)
         WaitForSingleObject(sem_rw, INFINITE);
 
         int index = p_livre % buffer_size;
-        buffer[index] = data_counter;
+
+        /* criacao de mensagem */
+
+        Message message;
+        message.plc = generate_message_plc(message_counter);
+
+        /* deposito de mensagem em lista */
+
+        buffer[index] = message;
         p_livre++;
 
-        printf("\nThread leitora de dados de processo depositou informação %i em buffer[%i]\n", data_counter, index);
-        data_counter += 2;
+        printf("\nThread leitora de dados depositou a seguinte mensagem na posicao %i da lista 1:\n", index);
+        show_message(message.plc);
 
         ReleaseSemaphore(sem_rw, 1, NULL);
 
@@ -591,7 +606,8 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 
         index = p_ocupado % buffer_size;
         /* consome dado de lista 1 */
-        int data = buffer[index];
+        /* int data = buffer[index]; */
+        int data = 0;
 
         printf("\nConsumindo dado buffer[%i] = %i\n", index, data);
 
