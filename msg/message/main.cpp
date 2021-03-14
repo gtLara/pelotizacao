@@ -13,6 +13,8 @@ int main(){
     int nseq = -1;
     int id_disco_gran;
     int id_disco_plc;
+    int gr1;
+    int gr2;
     double gr_med;
     double gr_max;
     double gr_min;
@@ -29,9 +31,15 @@ int main(){
     Sleep(500);
 
     id_disco_gran = (rand() % 2)+1;
-    gr_med = (rand() % 10000) ;
-    gr_max = (rand() % 10000) ;
-    gr_min = (rand() % 10000) ;
+    gr1 = (rand() % 10000);
+    gr2 = (rand() % 10000);
+    if (gr1 > gr2) {
+        gr_max = gr1; gr_min = gr2;
+    }
+    else {
+        gr_max = gr2; gr_min = gr1;
+    }
+    gr_med = (gr_min + gr_max)/2 ;
     sigma = (rand() % 10000) ;
 
     id_disco_plc = (rand() % 6)+1;
@@ -51,7 +59,7 @@ int main(){
 
     nseq = ( nseq + 1 ) % 10;
     MessageGranulometria messagegran = create_message(nseq, id_disco_gran, gr_med/100, gr_max/100, gr_min/100, sigma, timestamp, 0);
-    /* show_message(messagegran); */
+    show_message(messagegran);
 
     MessagePLC messageplc = create_message(nseq, id_disco_plc, vz_entrada/10, vz_saida/10, velocidade/10, inclinacao/10, potencia/1000, timestamp, 99);
     show_message(messageplc);

@@ -17,10 +17,14 @@ MessageGranulometria create_message(int nseq, int id_disco, double gr_medio, dou
 }
 
 void show_message(MessageGranulometria msg){
-    printf("\n%i;%i;%i;%.2f;%.2f;%.2f;%.2f;%i:%i:%i\n", 
-                        msg.tipo, msg.nseq, msg.id_disco, msg.gr_medio,
-                        msg.gr_max, msg.gr_min, msg.sigma, msg.time.hour,
-                        msg.time.minute, msg.time.second);
+    /* printf("\n%i;%i;%i;%.2f;%.2f;%.2f;%.2f;%i:%i:%i\n", */ 
+    /*                     msg.tipo, msg.nseq, msg.id_disco, msg.gr_medio, */
+    /*                     msg.gr_max, msg.gr_min, msg.sigma, msg.time.hour, */
+    /*                     msg.time.minute, msg.time.second); */
+    printf("%i:%i:%i NSEQ: %i   ID: %i  GMED: %.2f  GMAX: %.2f  GMIN: %.2f  SIG: %.2f\n",
+                        msg.time.hour, msg.time.minute, msg.time.second,
+                        msg.nseq, msg.id_disco, msg.gr_medio,
+                        msg.gr_max, msg.gr_min, msg.sigma);
 }
 
 MessagePLC create_message(int nseq, int id_disco, double vz_entrada, double vz_saida,
@@ -41,9 +45,13 @@ MessagePLC create_message(int nseq, int id_disco, double vz_entrada, double vz_s
 }
 
 void show_message(MessagePLC msg){
-    printf("\n%i;%i;%i;%.1f;%.1f;%.1f;%.1f;%.1f;%i:%i:%i.%i\n", 
-                        msg.tipo, msg.nseq, msg.id_disco, msg.vz_entrada,
-                        msg.vz_saida, msg.velocidade, msg.inclinacao,
-                        msg.potencia,msg.time.hour, msg.time.minute,
-                        msg.time.second, msg.time.millisecond);
+    /* printf("\n%i;%i;%i;%.1f;%.1f;%.1f;%.1f;%.1f;%i:%i:%i.%i\n", */ 
+    /*                     msg.tipo, msg.nseq, msg.id_disco, msg.vz_entrada, */
+    /*                     msg.vz_saida, msg.velocidade, msg.inclinacao, */
+    /*                     msg.potencia,msg.time.hour, msg.time.minute, */
+    /*                     msg.time.second, msg.time.millisecond); */
+    printf("%i:%i:%i NSEQ: %i   ID: %i  VZ E: %.1f  VZ S: %.1f  V: %.1f  ANG: %.1f  P: %.1f\n",
+        msg.time.hour, msg.time.minute, msg.time.second,
+        msg.nseq, msg.id_disco,  msg.vz_entrada, msg.vz_saida,
+        msg.velocidade, msg.inclinacao, msg.potencia);
 }
