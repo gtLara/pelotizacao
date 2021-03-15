@@ -4,6 +4,8 @@
 #include<process.h>
 #include<locale.h>
 
+#include"message.h"
+
 #define _CHECKERROR	1
 #include "CheckForError.h"
 
@@ -32,19 +34,19 @@ int main() {
     HANDLE mapped_memory = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, "lista_2");
     /* CheckForError(mapped_memory); */
 
-    int* second_buffer_local = (int*)MapViewOfFile(
-                                                    mapped_memory,
-                                                    FILE_MAP_WRITE,
-                                                    0,
-                                                    0,
-                                                    sizeof(int) * buffer_2_size);
+    Message* second_buffer_local = (Message*)MapViewOfFile(
+                                                            mapped_memory,
+                                                            FILE_MAP_WRITE,
+                                                            0,
+                                                            0,
+                                                            sizeof(Message) * buffer_2_size);
 
     /* abre variaveis de sincronizacao de segunda lista */
 
     HANDLE mapped_p_ocupado = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, "p_ocupado");
     HANDLE mapped_p_livre = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, "p_livre");
 
-    int second_p_ocupado_offset = sizeof(int) * buffer_2_size + 100;
+    int second_p_ocupado_offset = sizeof(Message) * buffer_2_size + 100;
 
     int p_ocupado = (int)MapViewOfFile(
                                                 mapped_p_ocupado,
@@ -53,7 +55,7 @@ int main() {
                                                 second_p_ocupado_offset, // desclocamento para nao sobrepor a segunda lista
                                                 sizeof(int));
 
-    int second_p_livre_offset = sizeof(int) * buffer_2_size + 200;
+    int second_p_livre_offset = sizeof(Message) * buffer_2_size + 200;
 
     int p_livre = (int)MapViewOfFile(
                                                 mapped_p_livre,
@@ -68,7 +70,7 @@ int main() {
     HANDLE occupied_sem_events[3] = { sem_ocupado, end_event, toggle_event };
 
     int data_index;
-    int recovered_data;
+    Message recovered_data;
 
     do {
 
@@ -114,7 +116,7 @@ int main() {
         data_index = p_ocupado % buffer_2_size;
         
         recovered_data = second_buffer_local[data_index];
-        printf("\n Carregando dado %i de buffer[%i]\n", recovered_data, data_index);
+        show_message(recovered_data.granulometria);
         p_ocupado++;
 
         ReleaseSemaphore(sem_rw, 1, NULL);

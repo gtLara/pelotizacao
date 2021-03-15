@@ -10,14 +10,6 @@
 
 /* funcao que limpa saida de console */
 
-/* void show_message(MessagePLC msg){ */
-
-/*     printf("%i:%i:%i NSEQ: %i   ID: %i  VZ E: %.1f  VZ S: %.1f  V: %.1f  ANG: %.1f  P: %.1f\n", */
-/*         msg.time.hour, msg.time.minute, msg.time.second, */
-/*         msg.nseq, msg.id_disco,  msg.vz_entrada, msg.vz_saida, */
-/*         msg.velocidade, msg.inclinacao, msg.potencia); */
-/* } */
-
 void clear_screen(){
 
   DWORD count;

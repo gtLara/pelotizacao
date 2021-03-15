@@ -69,18 +69,18 @@ HANDLE mapped_memory = CreateFileMapping(
                                           NULL,
                                           PAGE_READWRITE,
                                           0,
-                                          sizeof(int)*buffer_2_size,   // quando a lista segurar mensagens esse campo deve ser reajustado
+                                          sizeof(Message)*buffer_2_size,   // quando a lista segurar mensagens esse campo deve ser reajustado
                                           "lista_2");
 
 
 /* CheckForError(mapped_memory); */
 
-int * second_buffer_local = (int*)MapViewOfFile(
-                                        mapped_memory,
-                                        FILE_MAP_WRITE,
-                                        0,
-                                        0,
-                                        sizeof(int) * buffer_2_size);
+Message * second_buffer_local = (Message*)MapViewOfFile(
+                                                mapped_memory,
+                                                FILE_MAP_WRITE,
+                                                0,
+                                                0,
+                                                sizeof(Message) * buffer_2_size);
 
 /* CheckForError(second_buffer_local); */
 
@@ -94,7 +94,7 @@ HANDLE mapped_memory_p_ocupado = CreateFileMapping(
                                           sizeof(int),
                                           "p_ocupado");
 
-int second_p_ocupado_offset = sizeof(int) * buffer_2_size + 100;
+int second_p_ocupado_offset = sizeof(Message) * buffer_2_size + 100;
 
 int second_p_ocupado = (int)MapViewOfFile(
                                             mapped_memory_p_ocupado,
@@ -111,7 +111,7 @@ HANDLE mapped_memory_p_livre = CreateFileMapping(
                                           sizeof(int),
                                           "p_livre");
 
-int second_p_livre_offset = sizeof(int) * buffer_2_size + 200;
+int second_p_livre_offset = sizeof(Message) * buffer_2_size + 200;
 
 int second_p_livre = (int)MapViewOfFile(
                                             mapped_memory_p_livre,
@@ -650,8 +650,8 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 
             second_index = second_p_livre % buffer_2_size;
 
-            second_buffer_local[second_index] = 0;
-            /* printf("\nThread capturadora de mensagens escreveu informação %i em buffer em memoria[%i]\n", data, second_index); */
+            second_buffer_local[second_index] = message;
+            printf("\nThread capturadora de mensagens escreveu informação");
             second_p_livre++;
 
             ReleaseSemaphore(second_sem_rw, 1, NULL);
