@@ -419,7 +419,6 @@ DWORD WINAPI leitura_medicao(LPVOID id)
         buffer[index] = message;
         p_livre++;
 
-        printf("\nThread leitora de medição de granulometria depositou a seguinte mensagem na posicao %i da lista 1:\n", index);
         show_message(message.granulometria);
 
         /* libera semáforo binário de acesso ao buffer */
@@ -513,7 +512,6 @@ DWORD WINAPI leitura_dados(LPVOID id)
         buffer[index] = message;
         p_livre++;
 
-        printf("\nThread leitora de dados depositou a seguinte mensagem na posicao %i da lista 1:\n", index);
         show_message(message.plc);
 
         ReleaseSemaphore(sem_rw, 1, NULL);
@@ -606,12 +604,11 @@ DWORD WINAPI captura_mensagens(LPVOID id)
         WaitForSingleObject(sem_rw, INFINITE);
 
         index = p_ocupado % buffer_size;
+
         /* consome dado de lista 1 */
-        /* int data = buffer[index]; */
+
         Message message;
         message = buffer[index];
-
-        /* printf("\nConsumindo dado buffer[%i] = %i\n", index, data); */
 
         p_ocupado++;
 
@@ -624,8 +621,7 @@ DWORD WINAPI captura_mensagens(LPVOID id)
         /* analisa dado consumido */
 
         if(message.type == 99){
-            /* printf("\nEnviand dado %i para tarefa de exibe dados\n", data); */
-            printf("\nEnviand dado para tarefa de exibe dados\n");
+            printf("\nEnviando mensagem para tarefa de exibe dados\n");
             WriteFile(message_mailslot, &message, sizeof(Message), NULL, NULL);
         }else{ 
             /* caso em que dados sao escritos na segunda lista. requer sincronizacao */
@@ -651,7 +647,7 @@ DWORD WINAPI captura_mensagens(LPVOID id)
             second_index = second_p_livre % buffer_2_size;
 
             second_buffer_local[second_index] = message;
-            printf("\nThread capturadora de mensagens escreveu informação");
+            printf("\nThread capturadora de mensagens escreveu dado em memoria");
             second_p_livre++;
 
             ReleaseSemaphore(second_sem_rw, 1, NULL);
@@ -660,7 +656,6 @@ DWORD WINAPI captura_mensagens(LPVOID id)
 
         /* espera por 1 s por objeto de toggle ou finalizador */
 
-        Sleep(1000);
         ret = WaitForMultipleObjects(2, Events, FALSE, timeout);
 
         /* caso espere o tempo limite, prosseguir com lógica */
