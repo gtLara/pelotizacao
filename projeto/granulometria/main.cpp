@@ -419,7 +419,7 @@ DWORD WINAPI leitura_medicao(LPVOID id)
         buffer[index] = message;
         p_livre++;
 
-        show_message(message.granulometria);
+        /* show_message(message.granulometria); */
 
         /* libera semáforo binário de acesso ao buffer */
 
@@ -513,7 +513,7 @@ DWORD WINAPI leitura_dados(LPVOID id)
         buffer[index] = message;
         p_livre++;
 
-        show_message(message.plc);
+        /* show_message(message.plc); */
 
         ReleaseSemaphore(sem_rw, 1, NULL);
 
@@ -623,7 +623,7 @@ DWORD WINAPI captura_mensagens(LPVOID id)
         /* analisa dado consumido */
 
         if (message.type == 99) {
-            printf("\nEnviando mensagem para tarefa de exibe dados\n");
+            /* printf("\nEnviando mensagem para tarefa de exibe dados\n"); */
             WriteFile(message_mailslot, &message, sizeof(Message), NULL, NULL);
         }
         else {
@@ -650,7 +650,7 @@ DWORD WINAPI captura_mensagens(LPVOID id)
             second_index = second_p_livre % buffer_2_size;
 
             second_buffer_local[second_index] = message;
-            printf("\nThread capturadora de mensagens escreveu dado em memoria");
+            /* printf("\nThread capturadora de mensagens escreveu dado em memoria"); */
             second_p_livre++;
 
             ReleaseSemaphore(second_sem_rw, 1, NULL);
