@@ -1,0 +1,2 @@
+C:\Users\Gabriel\Desktop\project\granulometria\x64\Debug\granulometria.exe
+C:\Users\Gabriel\Desktop\project\granulometria\x64\Debug\granulometria.pdb
