@@ -152,4 +152,6 @@ int main() {
 
     } while (event_id != 1);
 
+    /* o mapeamento de memoria fecha com o fim do programa */
+
 };

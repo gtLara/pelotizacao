@@ -69,7 +69,7 @@ HANDLE mapped_memory = CreateFileMapping(
     NULL,
     PAGE_READWRITE,
     0,
-    sizeof(Message) * buffer_2_size,   // quando a lista segurar mensagens esse campo deve ser reajustado
+    sizeof(Message) * buffer_2_size,
     "lista_2");
 
 
@@ -119,7 +119,6 @@ int second_p_livre = (int)MapViewOfFile(
     0,
     second_p_livre_offset, // desclocamento para nao sobrepor a segunda lista nem p_ocupado
     sizeof(int));
-
 
 /* cria variaveis de processo */
 
@@ -207,8 +206,6 @@ int main()
     /* cria evento com reset manual para encerramento */
 
     end_event = CreateEvent(NULL, TRUE, FALSE, TEXT("end_event"));
-
-    /* cria segunda lista compartilhada em memoria */
 
     /* cria threads */
 
@@ -348,7 +345,7 @@ int main()
 
     WaitForMultipleObjects(3, threads, TRUE, INFINITE);
 
-    /* destrói handles threads */
+    /* encerra handles e mapeamento em memoria */
 
     CloseHandle(thread_leitura_medicao);
     CloseHandle(thread_leitura_dados);
@@ -357,6 +354,23 @@ int main()
     CloseHandle(leitura_dados_toggle_event);
     CloseHandle(captura_mensagens_toggle_event);
     CloseHandle(end_event);
+
+    CloseHandle(exibe_dados_toggle_event);
+    CloseHandle(analise_granulometria_toggle_event);
+
+    CloseHandle(exibe_dados_mailslot_event);
+
+    CloseHandle(sem_livre);
+    CloseHandle(sem_ocupado);
+    CloseHandle(sem_rw);
+
+    CloseHandle(second_sem_livre);
+    CloseHandle(second_sem_ocupado);
+    CloseHandle(second_sem_rw);
+
+    UnmapViewOfFile(mapped_memory_p_livre);
+    UnmapViewOfFile(mapped_memory_p_ocupado);
+    UnmapViewOfFile(mapped_memory);
 
     printf("\n___________________________________________________"
         "\n              Processo encerrando."
@@ -419,15 +433,11 @@ DWORD WINAPI leitura_medicao(LPVOID id)
         buffer[index] = message;
         p_livre++;
 
-        /* show_message(message.granulometria); */
-
         /* libera semáforo binário de acesso ao buffer */
 
         ReleaseSemaphore(sem_rw, 1, NULL);
 
         ReleaseSemaphore(sem_ocupado, 1, &previous_ocuppied_count);
-
-        /* TODO: decidir se tempo ser arrendondado para segundos ou nao */
 
         int rand_timeout = rand() % 5;
         ret = WaitForMultipleObjects(2, Events, FALSE, rand_timeout * 1000);
@@ -498,6 +508,7 @@ DWORD WINAPI leitura_dados(LPVOID id)
         }
 
         /* espera mutex para acessar buffer */
+
         WaitForSingleObject(sem_rw, INFINITE);
 
         int index = p_livre % buffer_size;
@@ -513,12 +524,9 @@ DWORD WINAPI leitura_dados(LPVOID id)
         buffer[index] = message;
         p_livre++;
 
-        /* show_message(message.plc); */
-
         ReleaseSemaphore(sem_rw, 1, NULL);
 
         ReleaseSemaphore(sem_ocupado, 1, &previous_ocuppied_count);
-        /* espera por 1 s por objeto de toggle ou finalizador */
 
         int local_timeout = 500;
         ret = WaitForMultipleObjects(2, Events, FALSE, local_timeout);
@@ -623,12 +631,12 @@ DWORD WINAPI captura_mensagens(LPVOID id)
         /* analisa dado consumido */
 
         if (message.type == 99) {
-            /* printf("\nEnviando mensagem para tarefa de exibe dados\n"); */
+            /* envia mensagem para tarefa de exibe dados */
             WriteFile(message_mailslot, &message, sizeof(Message), NULL, NULL);
         }
         else {
             /* caso em que dados sao escritos na segunda lista. requer sincronizacao */
-            /* printf("\nEnviando dado %i para segunda lista circular\n", data); */
+            /* envia dado para segunda lista circular */
 
             /* espera por posicoes livres na lista */
 
@@ -650,14 +658,12 @@ DWORD WINAPI captura_mensagens(LPVOID id)
             second_index = second_p_livre % buffer_2_size;
 
             second_buffer_local[second_index] = message;
-            /* printf("\nThread capturadora de mensagens escreveu dado em memoria"); */
+            /* thread capturadora de mensagens escreve dado em memoria */
             second_p_livre++;
 
             ReleaseSemaphore(second_sem_rw, 1, NULL);
             ReleaseSemaphore(second_sem_ocupado, 1, NULL);
         };
-
-        /* espera por 1 s por objeto de toggle ou finalizador */
 
         ret = WaitForMultipleObjects(2, Events, FALSE, timeout);
 
