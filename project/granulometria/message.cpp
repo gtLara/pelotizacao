@@ -101,7 +101,7 @@ MessagePLC generate_message_plc(int &nseq){
     vz_saida = (rand() % 10000) ;
     velocidade = (rand() % 10000) ;
     inclinacao = (rand() % 450) ;
-    potencia = (rand() % 2000) ;
+    potencia = (rand() % 5000) ;
 
     GetLocalTime(&time);
     
@@ -120,8 +120,8 @@ MessagePLC generate_message_plc(int &nseq){
 
 void show_message(MessagePLC msg){
 
-    printf("%i:%i:%i NSEQ: %i   ID: %i  VZ E: %.1f  VZ S: %.1f  V: %.1f  ANG: %.1f  P: %.1f\n",
-        msg.time.hour, msg.time.minute, msg.time.second,
-        msg.nseq, msg.id_disco,  msg.vz_entrada, msg.vz_saida,
-        msg.velocidade, msg.inclinacao, msg.potencia);
+    printf("%i:%i:%i:%i NSEQ: %i   ID: %i  VZ E: %.1f  VZ S: %.1f  V: %.1f  ANG: %.1f  P: %.1f\n",
+            msg.time.hour, msg.time.minute, msg.time.second, msg.time.millisecond,
+            msg.nseq, msg.id_disco,  msg.vz_entrada, msg.vz_saida,
+            msg.velocidade, msg.inclinacao, msg.potencia);
 }
